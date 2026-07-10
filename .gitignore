@@ -1,0 +1,46 @@
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# environment variables
+.env
+.env.*
+
+# macOS-specific files
+.DS_Store
+Thumbs.db
+
+# jetbrains setting folder
+.idea/
+*.swp
+*.swo
+*~
+
+# local temporary files
+.tmp/
+tmp/
+*.tmp
+
+# test coverage
+coverage/
+
+# pagefind
+public/pagefind
+
+# pnpm
+.pnpm-store
+
+# docker compose
+compose.override.yaml
