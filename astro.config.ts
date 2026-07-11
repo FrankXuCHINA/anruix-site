@@ -38,10 +38,45 @@ export default defineConfig({
   markdown: {
     processor: unified({
       remarkPlugins: [
-        remarkToc,
-        [remarkCollapse, { test: "Table of contents" }],
+        [remarkToc, { heading: "目录" }],
+        [remarkCollapse, { test: "目录" }],
       ],
-      rehypePlugins: [rehypeCallouts],
+      rehypePlugins: [
+        [
+          rehypeCallouts,
+          {
+            callouts: {
+              note: { title: "备注" },
+              abstract: { title: "摘要" },
+              summary: { title: "总结" },
+              tldr: { title: "概览" },
+              info: { title: "信息" },
+              todo: { title: "待办" },
+              tip: { title: "提示" },
+              hint: { title: "提示" },
+              important: { title: "重要" },
+              success: { title: "成功" },
+              check: { title: "检查" },
+              done: { title: "完成" },
+              question: { title: "问题" },
+              help: { title: "帮助" },
+              faq: { title: "常见问题" },
+              warning: { title: "警告" },
+              attention: { title: "注意" },
+              caution: { title: "谨慎" },
+              failure: { title: "失败" },
+              missing: { title: "缺失" },
+              fail: { title: "失败" },
+              danger: { title: "危险" },
+              error: { title: "错误" },
+              bug: { title: "问题" },
+              example: { title: "示例" },
+              quote: { title: "引用" },
+              cite: { title: "引用" },
+            },
+          },
+        ],
+      ],
     }),
     shikiConfig: {
       themes: { light: "min-light", dark: "night-owl" },
