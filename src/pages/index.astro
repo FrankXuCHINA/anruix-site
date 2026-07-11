@@ -56,7 +56,7 @@ const homePath = getRelativeLocaleUrl(locale, "");
       <p class="mt-2">
         本站基于 AstroPaper 构建。更多信息请查看
         <LinkButton
-          class="hover:text-accent underline decoration-dashed underline-offset-4"
+          class="text-accent hover:text-accent-hover underline underline-offset-2"
           href={getRelativeLocaleUrl(locale, "about")}
         >
           关于本站
@@ -107,7 +107,10 @@ const homePath = getRelativeLocaleUrl(locale, "");
     }
 
     <div class="my-8 text-center">
-      <LinkButton href={getRelativeLocaleUrl(locale, "posts")}>
+      <LinkButton
+        class="button-primary"
+        href={getRelativeLocaleUrl(locale, "posts")}
+      >
         {t.home.allPosts}
         <IconArrowRight class="inline-block rtl:-rotate-180" />
       </LinkButton>
