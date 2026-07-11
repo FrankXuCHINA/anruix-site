@@ -6,6 +6,27 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @layer base {
+  html,
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    font-weight: 400;
+    letter-spacing: normal;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+  }
+
   * {
     @apply border-border outline-accent/75;
     scrollbar-width: auto;
