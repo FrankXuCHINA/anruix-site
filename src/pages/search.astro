@@ -124,7 +124,7 @@ const t = useTranslations(locale);
 
 <style is:global>
   #pagefind-search {
-    --pagefind-ui-font: var(--font-app);
+    --pagefind-ui-font: var(--font-sans);
     --pagefind-ui-text: var(--foreground);
     --pagefind-ui-background: var(--background);
     --pagefind-ui-border: var(--border);
@@ -168,7 +168,7 @@ const t = useTranslations(locale);
     }
 
     .pagefind-ui__result-nested .pagefind-ui__result-link:before {
-      font-family: system-ui;
+      font-family: var(--font-sans);
     }
   }
 </style>

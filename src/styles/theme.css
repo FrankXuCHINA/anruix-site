@@ -7,7 +7,13 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
-  --font-app: var(--font-google-sans-code);
+  --font-sans:
+    "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei",
+    "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:
+    var(--font-google-sans-code, "Google Sans Code"), "Cascadia Code",
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-app: var(--font-sans);
 }
 
 /* Light theme values */
