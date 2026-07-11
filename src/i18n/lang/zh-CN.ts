@@ -14,6 +14,8 @@ export default {
     updatedAt: "更新于",
     tagLabel: "标签",
     backToTop: "返回顶部",
+    tableOfContents: "目录",
+    tocLabel: "文章目录",
     editPage: "编辑本页",
     previousPost: "上一篇",
     nextPost: "下一篇",
