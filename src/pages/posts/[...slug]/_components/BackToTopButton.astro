@@ -6,8 +6,12 @@ const t = useTranslations(Astro.currentLocale);
 ---
 
 <div class="article-back-to-top">
-  <button type="button" data-article-back-to-top aria-label={t.post.backToTop}>
+  <button
+    type="button"
+    data-article-back-to-top
+    aria-label={t.post.backToTop}
+    title={t.post.backToTop}
+  >
     <IconArrowNarrowUp aria-hidden="true" class="size-4" />
-    <span>{t.post.backToTop}</span>
   </button>
 </div>
