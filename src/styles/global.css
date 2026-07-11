@@ -105,10 +105,54 @@
     padding-right: max(1rem, env(safe-area-inset-right));
   }
 
+  .article-page-shell {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding: 2.5rem 1.25rem 1rem;
+  }
+
+  .article-main {
+    width: 100%;
+    max-width: 48rem;
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  .article-title {
+    max-width: 100%;
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: clamp(2rem, 5vw, 2.875rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
   @media (min-width: 640px) {
     .site-nav-inner {
       padding-left: max(1.5rem, env(safe-area-inset-left));
       padding-right: max(1.5rem, env(safe-area-inset-right));
+    }
+
+    .article-page-shell {
+      padding: 3.5rem 1.5rem 1rem;
+    }
+
+    .article-meta {
+      font-size: 0.9375rem;
     }
   }
 

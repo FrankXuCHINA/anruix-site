@@ -12,12 +12,8 @@ export default {
   post: {
     publishedAt: "Published at",
     updatedAt: "Updated",
-    sharePostIntro: "Share this post:",
-    sharePostOn: "Share this post on {{platform}}",
-    sharePostViaEmail: "Share this post via email",
     tagLabel: "Tags",
     backToTop: "Back to top",
-    goBack: "Go back",
     editPage: "Edit page",
     previousPost: "Previous Post",
     nextPost: "Next Post",
