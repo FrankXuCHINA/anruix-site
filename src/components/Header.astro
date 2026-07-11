@@ -46,10 +46,7 @@ const isActive = (path: string) => {
     <div class="site-nav-inner flex flex-wrap items-center">
       <a
         href={getRelativeLocaleUrl(locale, "")}
-        class:list={[
-          "hover:text-accent order-1 flex min-h-9 items-center gap-2.5 font-semibold whitespace-nowrap transition-colors duration-150",
-          { "active-nav": isHome },
-        ]}
+        class="text-foreground hover:text-foreground focus-visible:text-foreground active:text-foreground visited:text-foreground order-1 flex min-h-9 items-center gap-2.5 font-semibold whitespace-nowrap no-underline transition-opacity duration-150 hover:opacity-[0.78]"
         aria-label={t.notFound.goHome}
         aria-current={isHome ? "page" : undefined}
       >

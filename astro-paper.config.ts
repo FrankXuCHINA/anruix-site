@@ -25,12 +25,4 @@ export default defineAstroPaperConfig({
     search: "pagefind",
   },
   socials: [],
-  shareLinks: [
-    { name: "whatsapp", url: "https://wa.me/?text=" },
-    { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" },
-    { name: "x",        url: "https://x.com/intent/post?url=" },
-    { name: "telegram", url: "https://t.me/share/url?url=" },
-    { name: "pinterest", url: "https://pinterest.com/pin/create/button/?url=" },
-    { name: "mail",     url: "mailto:?subject=%E5%88%86%E4%BA%AB%E8%BF%99%E7%AF%87%E6%96%87%E7%AB%A0&body=" },
-  ],
 });

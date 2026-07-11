@@ -10,12 +10,8 @@ export interface UIStrings {
   post: {
     publishedAt: string;
     updatedAt: string;
-    sharePostIntro: string;
-    sharePostOn: string;
-    sharePostViaEmail: string;
     tagLabel: string;
     backToTop: string;
-    goBack: string;
     editPage: string;
     previousPost: string;
     nextPost: string;
