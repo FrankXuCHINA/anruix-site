@@ -12,10 +12,6 @@ export function setupArticleNavigation() {
   );
   if (!articlePage) return;
 
-  const root = document.documentElement;
-  const progressBar = document.querySelector<HTMLElement>(
-    "#article-reading-progress-bar"
-  );
   const tocLinks = Array.from(
     articlePage.querySelectorAll<HTMLAnchorElement>("[data-heading-id]")
   );
@@ -28,8 +24,11 @@ export function setupArticleNavigation() {
   const backToTopButton = articlePage.querySelector<HTMLButtonElement>(
     "[data-article-back-to-top]"
   );
+  const backToTopContainer = backToTopButton?.closest<HTMLElement>(
+    ".article-back-to-top"
+  );
 
-  let progressFrame = 0;
+  let scrollFrame = 0;
   let resizeFrame = 0;
   let observer: IntersectionObserver | undefined;
   let lockedHeadingId: string | undefined;
@@ -68,21 +67,14 @@ export function setupArticleNavigation() {
     setActiveHeading(activeId);
   };
 
-  const updateProgress = () => {
-    progressFrame = 0;
-    if (!progressBar) return;
-
-    const scrollableHeight = root.scrollHeight - root.clientHeight;
-    const progress =
-      scrollableHeight > 0
-        ? Math.min(1, Math.max(0, root.scrollTop / scrollableHeight))
-        : 0;
-    progressBar.style.transform = `scaleX(${progress})`;
+  const updateBackToTopVisibility = () => {
+    scrollFrame = 0;
+    backToTopContainer?.classList.toggle("is-visible", window.scrollY >= 300);
   };
 
-  const requestProgressUpdate = () => {
-    if (progressFrame) return;
-    progressFrame = window.requestAnimationFrame(updateProgress);
+  const requestScrollUpdate = () => {
+    if (scrollFrame) return;
+    scrollFrame = window.requestAnimationFrame(updateBackToTopVisibility);
   };
 
   const createHeadingObserver = () => {
@@ -101,7 +93,6 @@ export function setupArticleNavigation() {
     if (resizeFrame) return;
     resizeFrame = window.requestAnimationFrame(() => {
       resizeFrame = 0;
-      updateProgress();
       createHeadingObserver();
     });
   };
@@ -147,7 +138,7 @@ export function setupArticleNavigation() {
     }
     if (id && headingIds.includes(id)) setActiveHeading(id);
     else updateActiveHeading();
-    requestProgressUpdate();
+    requestScrollUpdate();
   };
 
   const handleBackToTop = () => {
@@ -157,28 +148,28 @@ export function setupArticleNavigation() {
     });
   };
 
-  document.addEventListener("scroll", requestProgressUpdate, { passive: true });
+  document.addEventListener("scroll", requestScrollUpdate, { passive: true });
   window.addEventListener("resize", handleResize, { passive: true });
-  window.addEventListener("pageshow", requestProgressUpdate);
+  window.addEventListener("pageshow", requestScrollUpdate);
   window.addEventListener("hashchange", syncFromHash);
   window.addEventListener("popstate", syncFromHash);
   articlePage.addEventListener("click", handleTocClick);
   backToTopButton?.addEventListener("click", handleBackToTop);
 
-  updateProgress();
+  updateBackToTopVisibility();
   createHeadingObserver();
   window.requestAnimationFrame(syncFromHash);
 
   cleanupArticleNavigation = () => {
-    document.removeEventListener("scroll", requestProgressUpdate);
+    document.removeEventListener("scroll", requestScrollUpdate);
     window.removeEventListener("resize", handleResize);
-    window.removeEventListener("pageshow", requestProgressUpdate);
+    window.removeEventListener("pageshow", requestScrollUpdate);
     window.removeEventListener("hashchange", syncFromHash);
     window.removeEventListener("popstate", syncFromHash);
     articlePage.removeEventListener("click", handleTocClick);
     backToTopButton?.removeEventListener("click", handleBackToTop);
     observer?.disconnect();
-    window.cancelAnimationFrame(progressFrame);
+    window.cancelAnimationFrame(scrollFrame);
     window.cancelAnimationFrame(resizeFrame);
     window.clearTimeout(unlockTimer);
   };

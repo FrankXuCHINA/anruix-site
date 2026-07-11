@@ -117,7 +117,7 @@ const ogImage = ogImageUrl
   pubDatetime={pubDatetime}
   modDatetime={modDatetime}
 >
-  <Header showReadingProgress />
+  <Header />
 
   <main
     id="main-content"
@@ -125,65 +125,61 @@ const ogImage = ogImageUrl
     data-article-page
     data-pagefind-body
   >
-    <div class="article-content-grid">
-      <div class="article-main">
-        <header>
-          <h1
-            style={{ viewTransitionName: toTransitionName(title) }}
-            class="article-title"
-          >
-            {title}
-          </h1>
-
-          <div class="article-meta">
-            <time datetime={publishedDateTime}>{publishedDate}</time>
-            <span aria-hidden="true">·</span>
-            <span>{formattedWordCount} 字</span>
-          </div>
-        </header>
-
-        <ArticleToc {headings} variant="mobile" />
-
-        <article
-          id="article"
-          data-copy-label={t.post.copyCode}
-          data-copied-label={t.post.copied}
-          data-zoom-image-label={t.post.zoomImage}
-          data-image-preview-label={t.post.imagePreview}
-          data-close-image-preview-label={t.post.closeImagePreview}
-          class:list={[
-            "mt-10 w-full max-w-full",
-            "app-prose",
-            "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
-          ]}
+    <div class="article-main">
+      <header>
+        <h1
+          style={{ viewTransitionName: toTransitionName(title) }}
+          class="article-title"
         >
-          <Content />
-        </article>
+          {title}
+        </h1>
 
-        <hr class="border-border my-10" />
-
-        <EditPost class="sm:hidden" {hideEditPost} {post} />
-
-        <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-          {
-            tags.map(tag => (
-              <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />
-            ))
-          }
-        </ul>
-
-        <hr class="border-border my-10" />
-
-        <AdjacentPostNav {prevPost} {nextPost} />
-      </div>
-
-      <aside class="article-aside">
-        <div class="article-sidebar">
-          <ArticleToc {headings} variant="desktop" />
-          <BackToTopButton />
+        <div class="article-meta">
+          <time datetime={publishedDateTime}>{publishedDate}</time>
+          <span aria-hidden="true">·</span>
+          <span>{formattedWordCount} 字</span>
         </div>
-      </aside>
+      </header>
+
+      <ArticleToc {headings} variant="mobile" />
+
+      <article
+        id="article"
+        data-copy-label={t.post.copyCode}
+        data-copied-label={t.post.copied}
+        data-zoom-image-label={t.post.zoomImage}
+        data-image-preview-label={t.post.imagePreview}
+        data-close-image-preview-label={t.post.closeImagePreview}
+        class:list={[
+          "mt-10 w-full max-w-full",
+          "app-prose",
+          "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
+        ]}
+      >
+        <Content />
+      </article>
+
+      <hr class="border-border my-10" />
+
+      <EditPost class="sm:hidden" {hideEditPost} {post} />
+
+      <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
+        {
+          tags.map(tag => (
+            <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />
+          ))
+        }
+      </ul>
+
+      <hr class="border-border my-10" />
+
+      <AdjacentPostNav {prevPost} {nextPost} />
     </div>
+
+    <aside class="article-fixed-rail">
+      <ArticleToc {headings} variant="desktop" />
+      <BackToTopButton />
+    </aside>
   </main>
   <Footer />
 </PostLayout>

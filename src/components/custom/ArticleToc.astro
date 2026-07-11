@@ -15,11 +15,7 @@ const tocHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
 {
   tocHeadings.length > 0 && variant === "desktop" && (
     <div class="article-toc-desktop">
-      <nav
-        class="article-toc-card"
-        aria-label={t.post.tocLabel}
-        data-article-toc
-      >
+      <nav class="article-toc" aria-label={t.post.tocLabel} data-article-toc>
         <p class="article-toc-title">{t.post.tableOfContents}</p>
         <ul class="article-toc-list">
           {tocHeadings.map(({ depth, slug, text }) => (

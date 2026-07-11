@@ -12,11 +12,6 @@ import { stripBase, stripLocale } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
 
-type Props = {
-  showReadingProgress?: boolean;
-};
-
-const { showReadingProgress = false } = Astro.props;
 const { site, features } = config;
 
 const locale = Astro.currentLocale ?? config.site.lang;
@@ -157,13 +152,6 @@ const isActive = (path: string) => {
       </ul>
     </div>
   </nav>
-  {
-    showReadingProgress && (
-      <div class="article-reading-progress" aria-hidden="true">
-        <span id="article-reading-progress-bar" />
-      </div>
-    )
-  }
 </header>
 
 <script>
