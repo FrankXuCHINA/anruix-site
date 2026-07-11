@@ -73,6 +73,8 @@ export interface UIStrings {
     breadcrumb: string;
     lightMode: string;
     darkMode: string;
+    switchToLightMode: string;
+    switchToDarkMode: string;
     rssFeed: string;
   };
   socials: {

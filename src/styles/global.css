@@ -6,6 +6,10 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @layer base {
+  html {
+    scroll-padding-top: 4.25rem;
+  }
+
   html,
   body,
   button,
@@ -75,6 +79,47 @@
 }
 
 @layer components {
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    color: var(--foreground);
+    background: var(--header-background);
+    border-bottom: 1px solid var(--header-border);
+    -webkit-backdrop-filter: var(--header-backdrop);
+    backdrop-filter: var(--header-backdrop);
+  }
+
+  .site-nav {
+    width: 100%;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .site-nav-inner {
+    width: 100%;
+    max-width: 72rem;
+    min-height: 3.25rem;
+    margin-inline: auto;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  @media (min-width: 640px) {
+    .site-nav-inner {
+      padding-left: max(1.5rem, env(safe-area-inset-left));
+      padding-right: max(1.5rem, env(safe-area-inset-right));
+    }
+  }
+
+  @supports not (
+    (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+  ) {
+    .site-header {
+      background: var(--header-background-fallback);
+    }
+  }
+
   .button-primary,
   .button-secondary {
     display: inline-flex;
@@ -155,5 +200,5 @@
 }
 
 :target {
-  scroll-margin-block: 1rem;
+  scroll-margin-top: 4.25rem;
 }

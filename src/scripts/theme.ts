@@ -2,76 +2,126 @@ const THEME_KEY = "theme";
 const LIGHT = "light";
 const DARK = "dark";
 
-function getPreferredTheme(): string {
-  const stored = localStorage.getItem(THEME_KEY);
-  if (stored) return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? DARK
-    : LIGHT;
-}
+type Theme = typeof LIGHT | typeof DARK;
+type RuntimeWindow = Window &
+  typeof globalThis & {
+    __theme?: { value: Theme; isManual: boolean };
+    __themeControllerInitialized?: boolean;
+  };
 
-// Reuse the value already set by the inline FOUC-prevention script if available.
-let themeValue: string =
-  (window as unknown as { __theme?: { value: string } }).__theme?.value ??
-  getPreferredTheme();
+const runtimeWindow = window as RuntimeWindow;
 
-function persist(): void {
-  localStorage.setItem(THEME_KEY, themeValue);
-  reflect();
-}
+if (!runtimeWindow.__themeControllerInitialized) {
+  runtimeWindow.__themeControllerInitialized = true;
 
-function reflect(): void {
-  const root = document.firstElementChild;
-  root?.setAttribute("data-theme", themeValue);
-  root?.classList.toggle("dark", themeValue === DARK);
-  const themeButton = document.querySelector<HTMLButtonElement>("#theme-btn");
-  if (themeButton) {
-    const lightLabel = themeButton.dataset.labelLight ?? "浅色模式";
-    const darkLabel = themeButton.dataset.labelDark ?? "深色模式";
-    themeButton.setAttribute(
-      "aria-label",
-      themeValue === DARK ? darkLabel : lightLabel
-    );
-  }
+  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
-  // Fill <meta name="theme-color"> with the computed background colour so
-  // Android's browser chrome matches the page background.
-  const bg = window.getComputedStyle(document.body).backgroundColor;
-  document
-    .querySelector("meta[name='theme-color']")
-    ?.setAttribute("content", bg);
-}
+  const isTheme = (value: string | null): value is Theme =>
+    value === LIGHT || value === DARK;
 
-function setup(): void {
-  reflect();
-  document.querySelector("#theme-btn")?.addEventListener("click", () => {
-    themeValue = themeValue === LIGHT ? DARK : LIGHT;
-    persist();
-  });
-}
+  const getStoredTheme = (): Theme | null => {
+    try {
+      const value = localStorage.getItem(THEME_KEY);
+      return isTheme(value) ? value : null;
+    } catch {
+      return null;
+    }
+  };
 
-setup();
+  const storeTheme = (theme: Theme): void => {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // The selected theme still applies for this page when storage is blocked.
+    }
+  };
 
-// Re-run after View Transitions navigation.
-document.addEventListener("astro:after-swap", setup);
+  const getSystemTheme = (): Theme => (systemTheme.matches ? DARK : LIGHT);
 
-// Carry the theme-color value across View Transitions to prevent the
-// Android navigation bar from flashing during page transitions.
-document.addEventListener("astro:before-swap", event => {
-  const color = document
-    .querySelector("meta[name='theme-color']")
-    ?.getAttribute("content");
-  if (color) {
-    (event as { newDocument: Document }).newDocument
+  const storedTheme = getStoredTheme();
+  let hasManualPreference =
+    storedTheme !== null || runtimeWindow.__theme?.isManual === true;
+  let themeValue: Theme =
+    storedTheme ?? runtimeWindow.__theme?.value ?? getSystemTheme();
+
+  const updateThemeToggle = (theme: Theme): void => {
+    const button = document.querySelector<HTMLButtonElement>("#theme-toggle");
+    if (!button) return;
+
+    const label =
+      theme === LIGHT
+        ? (button.dataset.labelToDark ?? "切换到深色模式")
+        : (button.dataset.labelToLight ?? "切换到浅色模式");
+
+    button.dataset.currentTheme = theme;
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
+  };
+
+  const updateThemeColor = (): void => {
+    const background = window.getComputedStyle(document.body).backgroundColor;
+    document
       .querySelector("meta[name='theme-color']")
-      ?.setAttribute("content", color);
-  }
-});
+      ?.setAttribute("content", background);
+  };
 
-// Sync with OS-level dark/light preference changes.
-window
-  .matchMedia("(prefers-color-scheme: dark)")
-  .addEventListener("change", ({ matches }) => {
-    themeValue = matches ? DARK : LIGHT;
-    persist();
+  const applyTheme = (theme: Theme): void => {
+    themeValue = theme;
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.classList.toggle("dark", theme === DARK);
+    root.style.colorScheme = theme;
+    runtimeWindow.__theme = {
+      value: theme,
+      isManual: hasManualPreference,
+    };
+    updateThemeToggle(theme);
+    updateThemeColor();
+  };
+
+  document.addEventListener("click", event => {
+    const target = event.target as Element | null;
+    if (!target?.closest?.("#theme-toggle")) return;
+
+    hasManualPreference = true;
+    const nextTheme = themeValue === LIGHT ? DARK : LIGHT;
+    storeTheme(nextTheme);
+    applyTheme(nextTheme);
   });
+
+  systemTheme.addEventListener("change", ({ matches }) => {
+    if (hasManualPreference) return;
+    applyTheme(matches ? DARK : LIGHT);
+  });
+
+  window.addEventListener("storage", event => {
+    if (event.key !== THEME_KEY) return;
+
+    const syncedTheme = isTheme(event.newValue) ? event.newValue : null;
+    hasManualPreference = syncedTheme !== null;
+    applyTheme(syncedTheme ?? getSystemTheme());
+  });
+
+  document.addEventListener("astro:after-swap", () => {
+    applyTheme(themeValue);
+  });
+
+  document.addEventListener("astro:before-swap", event => {
+    const newDocument = (event as { newDocument: Document }).newDocument;
+    const newRoot = newDocument.documentElement;
+    newRoot.dataset.theme = themeValue;
+    newRoot.classList.toggle("dark", themeValue === DARK);
+    newRoot.style.colorScheme = themeValue;
+
+    const currentThemeColor = document
+      .querySelector("meta[name='theme-color']")
+      ?.getAttribute("content");
+    if (currentThemeColor) {
+      newDocument
+        .querySelector("meta[name='theme-color']")
+        ?.setAttribute("content", currentThemeColor);
+    }
+  });
+
+  applyTheme(themeValue);
+}

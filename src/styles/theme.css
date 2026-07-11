@@ -44,6 +44,10 @@
   --button-active: #0066cc;
   --selection-background: rgba(0, 113, 227, 0.2);
   --overlay: rgba(0, 0, 0, 0.72);
+  --header-background: rgba(255, 255, 255, 0.72);
+  --header-background-fallback: rgba(255, 255, 255, 0.94);
+  --header-border: rgba(0, 0, 0, 0.08);
+  --header-backdrop: saturate(180%) blur(20px);
 }
 
 /* Dark theme values */
@@ -66,6 +70,10 @@
   --button-active: #0066cc;
   --selection-background: rgba(41, 151, 255, 0.32);
   --overlay: rgba(0, 0, 0, 0.82);
+  --header-background: rgba(0, 0, 0, 0.68);
+  --header-background-fallback: rgba(0, 0, 0, 0.94);
+  --header-border: rgba(255, 255, 255, 0.12);
+  --header-backdrop: saturate(160%) blur(20px);
 }
 
 /* Keep print output readable even when the saved preference is dark. */
@@ -82,5 +90,8 @@
     --subtle-foreground: #86868b;
     --border: #d2d2d7;
     --accent: #0071e3;
+    --header-background: rgba(255, 255, 255, 0.94);
+    --header-background-fallback: #ffffff;
+    --header-border: rgba(0, 0, 0, 0.08);
   }
 }

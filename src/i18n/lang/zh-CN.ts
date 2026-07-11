@@ -75,6 +75,8 @@ export default {
     breadcrumb: "面包屑导航",
     lightMode: "浅色模式",
     darkMode: "深色模式",
+    switchToLightMode: "切换到浅色模式",
+    switchToDarkMode: "切换到深色模式",
     rssFeed: "RSS 订阅",
   },
   socials: {
