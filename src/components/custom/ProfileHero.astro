@@ -1,0 +1,27 @@
+---
+import { Image } from "astro:assets";
+import profileAvatar from "@/assets/images/profile/profile-avatar.png";
+---
+
+<section
+  aria-labelledby="profile-heading"
+  class="border-border flex flex-col items-center border-b pt-10 pb-10 text-center sm:pt-14 sm:pb-12"
+>
+  <Image
+    src={profileAvatar}
+    alt="安锐的个人头像"
+    width={1024}
+    height={1024}
+    format="png"
+    class="size-28 object-contain sm:size-34"
+  />
+  <h1
+    id="profile-heading"
+    class="text-foreground mt-6 text-3xl leading-tight font-bold sm:text-[2.5rem]"
+  >
+    安锐
+  </h1>
+  <p class="text-muted-foreground mt-2 text-base font-normal sm:text-xl">
+    念念不忘，必有回响
+  </p>
+</section>
