@@ -4,6 +4,7 @@ import PostLayout from "@/layouts/PostLayout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import Tag from "@/components/Tag.astro";
+import ArticleToc from "@/components/custom/ArticleToc.astro";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
@@ -77,7 +78,7 @@ const {
   hideEditPost,
 } = post.data;
 
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const publishedDate = dayjs(pubDatetime)
   .tz(timezone ?? config.site.timezone)
   .format("YYYY年M月D日");
@@ -116,97 +117,86 @@ const ogImage = ogImageUrl
   pubDatetime={pubDatetime}
   modDatetime={modDatetime}
 >
-  <Header />
+  <Header showReadingProgress />
 
-  <main id="main-content" class="article-page-shell" data-pagefind-body>
-    <div class="article-main">
-      <header>
-        <h1
-          style={{ viewTransitionName: toTransitionName(title) }}
-          class="article-title"
+  <main
+    id="main-content"
+    class="article-page-shell"
+    data-article-page
+    data-pagefind-body
+  >
+    <div class="article-content-grid">
+      <div class="article-main">
+        <header>
+          <h1
+            style={{ viewTransitionName: toTransitionName(title) }}
+            class="article-title"
+          >
+            {title}
+          </h1>
+
+          <div class="article-meta">
+            <time datetime={publishedDateTime}>{publishedDate}</time>
+            <span aria-hidden="true">·</span>
+            <span>{formattedWordCount} 字</span>
+          </div>
+        </header>
+
+        <ArticleToc {headings} variant="mobile" />
+
+        <article
+          id="article"
+          data-copy-label={t.post.copyCode}
+          data-copied-label={t.post.copied}
+          data-zoom-image-label={t.post.zoomImage}
+          data-image-preview-label={t.post.imagePreview}
+          data-close-image-preview-label={t.post.closeImagePreview}
+          class:list={[
+            "mt-10 w-full max-w-full",
+            "app-prose",
+            "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
+          ]}
         >
-          {title}
-        </h1>
+          <Content />
+        </article>
 
-        <div class="article-meta">
-          <time datetime={publishedDateTime}>{publishedDate}</time>
-          <span aria-hidden="true">·</span>
-          <span>{formattedWordCount} 字</span>
+        <hr class="border-border my-10" />
+
+        <EditPost class="sm:hidden" {hideEditPost} {post} />
+
+        <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
+          {
+            tags.map(tag => (
+              <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />
+            ))
+          }
+        </ul>
+
+        <hr class="border-border my-10" />
+
+        <AdjacentPostNav {prevPost} {nextPost} />
+      </div>
+
+      <aside class="article-aside">
+        <div class="article-sidebar">
+          <ArticleToc {headings} variant="desktop" />
+          <BackToTopButton />
         </div>
-      </header>
-
-      <article
-        id="article"
-        data-copy-label={t.post.copyCode}
-        data-copied-label={t.post.copied}
-        data-zoom-image-label={t.post.zoomImage}
-        data-image-preview-label={t.post.imagePreview}
-        data-close-image-preview-label={t.post.closeImagePreview}
-        class:list={[
-          "mt-10 w-full max-w-full",
-          "app-prose",
-          "prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)",
-        ]}
-      >
-        <Content />
-      </article>
-
-      <hr class="border-border my-10" />
-
-      <EditPost class="sm:hidden" {hideEditPost} {post} />
-
-      <BackToTopButton />
-
-      <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-        {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
-      </ul>
-
-      <hr class="border-border my-10" />
-
-      <AdjacentPostNav {prevPost} {nextPost} />
+      </aside>
     </div>
   </main>
   <Footer />
 </PostLayout>
 
 <script is:inline data-astro-rerun>
-  function createProgressBar() {
-    const progressContainer = document.createElement("div");
-    progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
-
-    const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar h-1 w-0 bg-accent";
-    progressBar.id = "myBar";
-
-    progressContainer.appendChild(progressBar);
-    document.body.appendChild(progressContainer);
-  }
-  createProgressBar();
-
-  function updateScrollProgress() {
-    document.addEventListener("scroll", () => {
-      const winScroll =
-        document.body.scrollTop || document.documentElement.scrollTop;
-      const height =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      if (document) {
-        const myBar = document.getElementById("myBar");
-        if (myBar) {
-          myBar.style.width = scrolled + "%";
-        }
-      }
-    });
-  }
-  updateScrollProgress();
-
   function addHeadingLinks() {
     const headings = Array.from(
-      document.querySelectorAll("h2, h3, h4, h5, h6")
+      document.querySelectorAll(
+        "#article h2, #article h3, #article h4, #article h5, #article h6"
+      )
     );
     for (const heading of headings) {
+      if (heading.querySelector(":scope > .heading-link")) continue;
       heading.classList.add("group");
       const link = document.createElement("a");
       link.className =
@@ -539,8 +529,11 @@ const ogImage = ogImageUrl
       window.__closeLightbox?.()
     );
   }
+</script>
 
-  document.addEventListener("astro:after-swap", () =>
-    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
-  );
+<script>
+  import { setupArticleNavigation } from "@/scripts/articleNavigation";
+
+  setupArticleNavigation();
+  document.addEventListener("astro:page-load", setupArticleNavigation);
 </script>

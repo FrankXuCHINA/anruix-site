@@ -12,6 +12,8 @@ export interface UIStrings {
     updatedAt: string;
     tagLabel: string;
     backToTop: string;
+    tableOfContents: string;
+    tocLabel: string;
     editPage: string;
     previousPost: string;
     nextPost: string;
