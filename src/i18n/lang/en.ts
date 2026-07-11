@@ -75,6 +75,8 @@ export default {
     breadcrumb: "Breadcrumb",
     lightMode: "Light mode",
     darkMode: "Dark mode",
+    switchToLightMode: "Switch to light mode",
+    switchToDarkMode: "Switch to dark mode",
     rssFeed: "RSS feed",
   },
   socials: {
