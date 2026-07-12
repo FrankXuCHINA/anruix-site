@@ -2,15 +2,12 @@ export interface UIStrings {
   nav: {
     home: string;
     posts: string;
-    tags: string;
     about: string;
-    archives: string;
     search: string;
   };
   post: {
     publishedAt: string;
     updatedAt: string;
-    tagLabel: string;
     backToTop: string;
     tableOfContents: string;
     tocLabel: string;
@@ -44,17 +41,8 @@ export interface UIStrings {
     allRightsReserved: string;
   };
   pages: {
-    tagTitle: string;
-    tagDesc: string;
-
-    tagsTitle: string;
-    tagsDesc: string;
-
     postsTitle: string;
     postsDesc: string;
-
-    archivesTitle: string;
-    archivesDesc: string;
 
     searchTitle: string;
     searchDesc: string;

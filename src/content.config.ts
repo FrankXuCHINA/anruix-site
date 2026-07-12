@@ -16,7 +16,7 @@ const posts = defineCollection({
         title: z.string(),
         featured: z.boolean().optional(),
         draft: z.boolean().optional(),
-        tags: z.array(z.string()).default(["其他"]),
+        tags: z.array(z.string()).default([]),
         ogImage: image().or(z.string()).optional(),
         cover: image().or(z.url()).optional(),
         coverAlt: z.string().trim().min(1).optional(),

@@ -2,7 +2,6 @@
 import { Image } from "astro:assets";
 import { getRelativeLocaleUrl } from "astro:i18n";
 import profileAvatar from "@/assets/images/profile/profile-avatar.png";
-import IconArchive from "@/assets/icons/IconArchive.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
 import IconX from "@/assets/icons/IconX.svg";
@@ -114,15 +113,6 @@ const isActive = (path: string) => {
         </li>
         <li>
           <a
-            href={getRelativeLocaleUrl(locale, "tags")}
-            class:list={{ "active-nav": isActive("/tags") }}
-            aria-current={isActive("/tags") ? "page" : undefined}
-          >
-            {t.nav.tags}
-          </a>
-        </li>
-        <li>
-          <a
             href={getRelativeLocaleUrl(locale, "about")}
             class:list={{ "active-nav": isActive("/about") }}
             aria-current={isActive("/about") ? "page" : undefined}
@@ -130,25 +120,6 @@ const isActive = (path: string) => {
             {t.nav.about}
           </a>
         </li>
-        {
-          features.showArchives && (
-            <li>
-              <LinkButton
-                href={getRelativeLocaleUrl(locale, "archives")}
-                class:list={[
-                  "gap-2 sm:size-9 sm:p-0",
-                  { "active-nav": isActive("/archives") },
-                ]}
-                title={t.nav.archives}
-                aria-label={t.nav.archives}
-                aria-current={isActive("/archives") ? "page" : undefined}
-              >
-                <IconArchive aria-hidden="true" class="size-5" />
-                <span class="sm:sr-only">{t.nav.archives}</span>
-              </LinkButton>
-            </li>
-          )
-        }
       </ul>
     </div>
   </nav>
