@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./theme.css";
 @import "./typography.css";
+@import "./article-listing.css";
 @import "rehype-callouts/theme/obsidian";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
@@ -332,7 +333,6 @@
     .article-toc-mobile {
       display: none;
     }
-
   }
 
   .button-primary,

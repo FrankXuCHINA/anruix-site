@@ -41,7 +41,6 @@ export interface UIStrings {
   };
   pages: {
     postsTitle: string;
-    postsDesc: string;
 
     searchTitle: string;
     searchDesc: string;

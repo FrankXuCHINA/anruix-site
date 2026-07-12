@@ -43,7 +43,7 @@ const pagefindBundlePath = getAssetPath("pagefind/");
       <h2>{t.search.pagefind.results_label}</h2>
       <p data-search-status aria-live="polite"></p>
     </div>
-    <ul class="post-card-list" data-search-list>
+    <ul class="article-card-list" data-search-list>
       {posts.map(post => <PostCard {post} searchable hidden />)}
     </ul>
   </div>
@@ -91,13 +91,13 @@ const pagefindBundlePath = getAssetPath("pagefind/");
 
   .home-search-input {
     width: 100%;
-    height: 2.875rem;
+    height: var(--article-search-height);
     padding: 0 2.75rem;
     color: var(--foreground);
     font-size: 1rem;
     background: var(--muted);
     border: 1px solid var(--border);
-    border-radius: 9999px;
+    border-radius: var(--article-search-radius);
     appearance: none;
     transition:
       border-color 160ms ease,
@@ -142,14 +142,7 @@ const pagefindBundlePath = getAssetPath("pagefind/");
   }
 
   .home-search-idle-message {
-    margin-top: 1rem;
-  }
-
-  .post-card-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.375rem;
-    margin: 0;
-    padding: 0;
+    margin-top: 1.25rem;
+    text-align: center;
   }
 </style>
