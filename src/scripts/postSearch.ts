@@ -3,11 +3,13 @@ type PagefindResult = {
 };
 
 type PagefindModule = {
+  init: () => Promise<void>;
   search: (term: string) => Promise<{ results: PagefindResult[] } | null>;
 };
 
 let cleanupPostSearch: (() => void) | undefined;
 let pagefindPromise: Promise<PagefindModule> | undefined;
+const PAGEFIND_URL = "/pagefind/pagefind.js";
 
 const normalizePath = (value: string) => {
   try {
@@ -17,13 +19,17 @@ const normalizePath = (value: string) => {
   }
 };
 
-const loadPagefind = (bundlePath: string) => {
-  pagefindPromise ??= import(
-    /* @vite-ignore */ `${bundlePath}pagefind.js`
-  ).catch(error => {
-    pagefindPromise = undefined;
-    throw error;
-  }) as Promise<PagefindModule>;
+const loadPagefind = () => {
+  pagefindPromise ??= import(/* @vite-ignore */ PAGEFIND_URL)
+    .then(async module => {
+      const pagefind = module as PagefindModule;
+      await pagefind.init();
+      return pagefind;
+    })
+    .catch(error => {
+      pagefindPromise = undefined;
+      throw error;
+    });
   return pagefindPromise;
 };
 
@@ -38,7 +44,9 @@ export function setupPostSearch() {
   const input = root.querySelector<HTMLInputElement>("input[type='search']");
   const results = root.querySelector<HTMLElement>("[data-search-results]");
   const status = root.querySelector<HTMLElement>("[data-search-status]");
-  const idle = root.querySelector<HTMLElement>("[data-search-idle]");
+  const clearButton = root.querySelector<HTMLButtonElement>(
+    "[data-search-clear]"
+  );
   const cards = Array.from(
     root.querySelectorAll<HTMLElement>("[data-post-card]")
   );
@@ -46,17 +54,18 @@ export function setupPostSearch() {
     document.querySelectorAll<HTMLElement>("[data-search-default]")
   );
 
-  if (!form || !input || !results || !status || !idle) return;
+  if (!form || !input || !results || !status || !clearButton) return;
 
-  const bundlePath = root.dataset.bundlePath ?? "/pagefind/";
-  const mode = root.dataset.searchMode ?? "home";
   let debounceTimer = 0;
   let requestId = 0;
 
   const setDefaultVisibility = (searching: boolean) => {
     defaultContent.forEach(element => (element.hidden = searching));
     results.hidden = !searching;
-    idle.hidden = mode === "home" || searching;
+  };
+
+  const updateClearButton = () => {
+    clearButton.hidden = input.value.length === 0;
   };
 
   const runSearch = async () => {
@@ -67,9 +76,6 @@ export function setupPostSearch() {
       cards.forEach(card => (card.hidden = true));
       status.textContent = "";
       setDefaultVisibility(false);
-      if (mode === "page") {
-        history.replaceState(history.state, "", window.location.pathname);
-      }
       return;
     }
 
@@ -79,14 +85,17 @@ export function setupPostSearch() {
     status.textContent = root.dataset.labelLoading ?? "正在加载";
     let rankedPaths: string[];
     try {
-      const pagefind = await loadPagefind(bundlePath);
+      const pagefind = await loadPagefind();
       const response = await pagefind.search(query);
       const resultData = await Promise.all(
         (response?.results ?? []).map(result => result.data())
       );
       rankedPaths = resultData.map(result => normalizePath(result.url));
     } catch {
-      rankedPaths = [];
+      if (currentRequest !== requestId) return;
+      status.textContent =
+        root.dataset.labelError ?? "搜索暂时不可用，请稍后重试";
+      return;
     }
 
     if (currentRequest !== requestId) return;
@@ -107,12 +116,6 @@ export function setupPostSearch() {
     status.textContent = matchedCards.length
       ? `找到 ${matchedCards.length} 篇文章`
       : (root.dataset.labelEmpty ?? "未找到相关文章");
-
-    if (mode === "page") {
-      const params = new URLSearchParams(window.location.search);
-      params.set("q", query);
-      history.replaceState(history.state, "", `?${params.toString()}`);
-    }
   };
 
   const scheduleSearch = () => {
@@ -120,21 +123,32 @@ export function setupPostSearch() {
     debounceTimer = window.setTimeout(runSearch, 180);
   };
 
+  const handleInput = () => {
+    updateClearButton();
+    if (!input.value.trim()) {
+      window.clearTimeout(debounceTimer);
+      void runSearch();
+      return;
+    }
+    scheduleSearch();
+  };
+
+  const clearSearch = () => {
+    input.value = "";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.focus({ preventScroll: true });
+  };
+
   const preventSubmit = (event: SubmitEvent) => event.preventDefault();
   form.addEventListener("submit", preventSubmit);
-  input.addEventListener("input", scheduleSearch);
-
-  if (mode === "page") {
-    const query = new URLSearchParams(window.location.search).get("q");
-    if (query) {
-      input.value = query;
-      void runSearch();
-    }
-  }
+  input.addEventListener("input", handleInput);
+  clearButton.addEventListener("click", clearSearch);
+  updateClearButton();
 
   cleanupPostSearch = () => {
     form.removeEventListener("submit", preventSubmit);
-    input.removeEventListener("input", scheduleSearch);
+    input.removeEventListener("input", handleInput);
+    clearButton.removeEventListener("click", clearSearch);
     window.clearTimeout(debounceTimer);
     requestId += 1;
   };

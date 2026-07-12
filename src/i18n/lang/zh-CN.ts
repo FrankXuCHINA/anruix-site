@@ -45,7 +45,6 @@ export default {
     postsTitle: "全部文章",
 
     searchTitle: "搜索文章",
-    searchDesc: "搜索站内文章标题、描述或正文。",
   },
   a11y: {
     skipToContent: "跳转到正文",
@@ -92,10 +91,9 @@ export default {
       keyboard_clear: "清除",
       keyboard_close: "关闭",
       keyboard_search: "搜索",
-      error_search: "搜索失败",
+      error_search: "搜索暂时不可用，请稍后重试",
       filter_selected_one: "已选择 [COUNT] 项",
       filter_selected_many: "已选择 [COUNT] 项",
-      input_hint: "输入内容后将显示结果",
       loading: "正在加载",
     },
   },

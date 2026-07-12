@@ -1,28 +1,24 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import IconSearch from "@/assets/icons/IconSearch.svg";
+import IconX from "@/assets/icons/IconX.svg";
 import PostCard from "./PostCard.astro";
-import { getAssetPath } from "@/utils/withBase";
 import { useTranslations } from "@/i18n";
 
 type Props = {
   posts: CollectionEntry<"posts">[];
-  mode?: "home" | "page";
 };
 
-const { posts, mode = "home" } = Astro.props;
+const { posts } = Astro.props;
 const t = useTranslations(Astro.currentLocale);
-const pagefindBundlePath = getAssetPath("pagefind/");
 ---
 
 <section
   class="home-search"
   data-post-search
-  data-search-mode={mode}
-  data-bundle-path={pagefindBundlePath}
   data-label-loading={t.search.pagefind.loading}
   data-label-empty={t.a11y.noResults}
-  data-label-input-hint={t.search.pagefind.input_hint}
+  data-label-error={t.search.pagefind.error_search}
 >
   <form class="home-search-form" role="search">
     <div class="home-search-input-wrap">
@@ -35,6 +31,16 @@ const pagefindBundlePath = getAssetPath("pagefind/");
         aria-label="搜索文章"
         autocomplete="off"
       />
+      <button
+        type="button"
+        class="home-search-clear"
+        data-search-clear
+        aria-label="清除搜索内容"
+        title="清除"
+        hidden
+      >
+        <IconX aria-hidden="true" class="home-search-clear-icon" />
+      </button>
     </div>
   </form>
 
@@ -47,22 +53,12 @@ const pagefindBundlePath = getAssetPath("pagefind/");
       {posts.map(post => <PostCard {post} searchable hidden />)}
     </ul>
   </div>
-
-  <p
-    class="home-search-idle-message"
-    data-search-idle
-    aria-live="polite"
-    hidden={mode === "home"}
-  >
-    {t.search.pagefind.input_hint}
-  </p>
 </section>
 
 <script>
   import { setupPostSearch } from "@/scripts/postSearch";
 
   setupPostSearch();
-  document.addEventListener("astro:page-load", setupPostSearch);
 </script>
 
 <style>
@@ -109,10 +105,50 @@ const pagefindBundlePath = getAssetPath("pagefind/");
     opacity: 1;
   }
 
+  .home-search-input::-webkit-search-cancel-button,
+  .home-search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .home-search-input::-ms-clear {
+    display: none;
+  }
+
   .home-search-input:focus-visible {
     border-color: var(--accent);
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .home-search-clear {
+    position: absolute;
+    top: 50%;
+    right: 0.4375rem;
+    display: flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--muted-foreground);
+    background: transparent;
+    border: 0;
+    transform: translateY(-50%);
+    transition: color 160ms ease;
+  }
+
+  .home-search-clear[hidden] {
+    display: none;
+  }
+
+  .home-search-clear:hover {
+    color: var(--accent);
+  }
+
+  .home-search-clear-icon {
+    width: 1.125rem;
+    height: 1.125rem;
   }
 
   .home-search-results {
@@ -135,14 +171,8 @@ const pagefindBundlePath = getAssetPath("pagefind/");
     line-height: 1.25;
   }
 
-  .home-search-results-heading p,
-  .home-search-idle-message {
+  .home-search-results-heading p {
     color: var(--muted-foreground);
     font-size: 0.875rem;
-  }
-
-  .home-search-idle-message {
-    margin-top: 1.25rem;
-    text-align: center;
   }
 </style>

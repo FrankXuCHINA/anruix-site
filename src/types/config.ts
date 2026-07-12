@@ -42,8 +42,6 @@ interface FeaturesConfig {
    * for the default layout OG image (build fails if missing).
    */
   dynamicOgImage?: boolean;
-  /** Show back button on post detail pages. Defaults to true. */
-  showBackButton?: boolean;
   /** "Edit page" link shown on post detail pages. */
   editPost?:
     | {

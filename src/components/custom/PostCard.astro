@@ -6,7 +6,6 @@ import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
 import { countContentWords } from "@/utils/countContentWords";
 import { getPostUrl } from "@/utils/getPostPaths";
-import { toTransitionName } from "@/utils/toTransitionName";
 import config from "@/config";
 
 type Props = {
@@ -83,12 +82,7 @@ const placeholderText = title.trim().charAt(0) || "安";
           <span>{formattedWordCount} 字</span>
         </div>
 
-        <h3
-          class="post-card-title"
-          transition:name={searchable ? undefined : toTransitionName(title)}
-        >
-          {title}
-        </h3>
+        <h3 class="post-card-title">{title}</h3>
         <p class="post-card-description">{description}</p>
       </div>
     </a>

@@ -10,7 +10,6 @@ import dayjsTimezone from "dayjs/plugin/timezone";
 import { countContentWords } from "@/utils/countContentWords";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
-import { toTransitionName } from "@/utils/toTransitionName";
 import EditPost from "./_components/EditPost.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
@@ -124,12 +123,7 @@ const ogImage = ogImageUrl
   >
     <div class="article-main">
       <header>
-        <h1
-          style={{ viewTransitionName: toTransitionName(title) }}
-          class="article-title"
-        >
-          {title}
-        </h1>
+        <h1 class="article-title">{title}</h1>
 
         <div class="article-meta">
           <time datetime={publishedDateTime}>{publishedDate}</time>
@@ -426,7 +420,6 @@ const ogImage = ogImageUrl
       document.body.appendChild(overlay);
       document.body.style.overflow = "hidden";
       document.addEventListener("keydown", onKeyDown);
-      window.__closeLightbox = close;
 
       requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
       closeButton.focus();
@@ -436,7 +429,6 @@ const ogImage = ogImageUrl
       if (!overlay) return;
       const el = overlay;
       overlay = null;
-      window.__closeLightbox = null;
 
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
@@ -505,18 +497,10 @@ const ogImage = ogImageUrl
     });
   }
   initLightbox();
-
-  if (!window.__lightboxSwapBound) {
-    window.__lightboxSwapBound = true;
-    document.addEventListener("astro:before-swap", () =>
-      window.__closeLightbox?.()
-    );
-  }
 </script>
 
 <script>
   import { setupArticleNavigation } from "@/scripts/articleNavigation";
 
   setupArticleNavigation();
-  document.addEventListener("astro:page-load", setupArticleNavigation);
 </script>

@@ -45,7 +45,6 @@ export default {
     postsTitle: "All Posts",
 
     searchTitle: "Search Posts",
-    searchDesc: "Search post titles, descriptions, or content.",
   },
   a11y: {
     skipToContent: "Skip to content",
@@ -97,7 +96,6 @@ export default {
       error_search: "Search failed",
       filter_selected_one: "[COUNT] filter selected",
       filter_selected_many: "[COUNT] filters selected",
-      input_hint: "Results appear as you type",
       loading: "Loading",
     },
   },

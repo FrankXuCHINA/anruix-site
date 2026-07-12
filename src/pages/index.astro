@@ -26,21 +26,15 @@ const homePosts = [...featuredPosts, ...recentPosts].slice(
   0,
   postsConfig.perIndex
 );
-const homePath = getRelativeLocaleUrl(locale, "");
 ---
 
 <Layout>
   <Header />
-  <main
-    id="main-content"
-    data-layout="index"
-    data-home-path={homePath}
-    class="w-full"
-  >
+  <main id="main-content" class="w-full">
     <ProfileHero />
 
     <div class="article-listing-layout">
-      <HomeSearch posts={sortedPosts} mode="home" />
+      <HomeSearch posts={sortedPosts} />
 
       <div data-search-default>
         {
@@ -69,17 +63,6 @@ const homePath = getRelativeLocaleUrl(locale, "");
   </main>
   <Footer />
 </Layout>
-
-<script>
-  document.addEventListener("astro:page-load", () => {
-    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
-      ?.dataset;
-    const baseRoot = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-    if (indexLayout?.layout) {
-      sessionStorage.setItem("backUrl", indexLayout.homePath ?? baseRoot);
-    }
-  });
-</script>
 
 <style>
   .home-posts {

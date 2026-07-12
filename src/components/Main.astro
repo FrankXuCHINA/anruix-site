@@ -1,7 +1,4 @@
 ---
-import { getRelativeLocaleUrl } from "astro:i18n";
-import config from "@/config";
-
 type Props = {
   pageTitle: string | [string, string];
   pageDesc?: string;
@@ -16,20 +13,17 @@ const {
   variant = "default",
 } = Astro.props;
 const isArticleListing = variant === "article-listing";
-
-const locale = Astro.currentLocale ?? config.site.lang;
-const backUrl = config.features.showBackButton
-  ? Astro.url.pathname
-  : getRelativeLocaleUrl(locale, "");
 ---
 
 <main
-  data-backUrl={backUrl}
   id="main-content"
   class:list={[
     "app-layout pb-4",
     className,
-    { "article-listing-page": isArticleListing },
+    {
+      "article-listing-page": isArticleListing,
+      "article-listing-page-title-only": isArticleListing && !pageDesc,
+    },
   ]}
 >
   <h1
@@ -41,28 +35,21 @@ const backUrl = config.features.showBackButton
   >
     {pageTitle}
   </h1>
-  <p
-    class:list={[
-      isArticleListing
-        ? "article-listing-description"
-        : "text-muted-foreground mt-2 mb-6",
-    ]}
-  >
-    {pageDesc}
-  </p>
+  {
+    pageDesc && (
+      <p
+        class:list={[
+          isArticleListing
+            ? "article-listing-description"
+            : "text-muted-foreground mt-2 mb-6",
+        ]}
+      >
+        {pageDesc}
+      </p>
+    )
+  }
   <slot />
 </main>
-
-<script>
-  document.addEventListener("astro:page-load", () => {
-    const mainContent: HTMLElement | null =
-      document.querySelector("#main-content");
-    const backUrl = mainContent?.dataset?.backurl;
-    if (backUrl) {
-      sessionStorage.setItem("backUrl", backUrl);
-    }
-  });
-</script>
 
 <style>
   .article-listing-page {
@@ -85,6 +72,10 @@ const backUrl = config.features.showBackButton
     font-size: clamp(1rem, 2.5vw, 1.125rem);
     line-height: 1.6;
     text-align: center;
+  }
+
+  .article-listing-page-title-only .article-listing-title {
+    margin-bottom: clamp(1.5rem, 4vw, 2rem);
   }
 
   @media (min-width: 640px) {

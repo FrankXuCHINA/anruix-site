@@ -1,8 +1,5 @@
 let cleanupArticleNavigation: (() => void) | undefined;
 
-const prefersReducedMotion = () =>
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 export function setupArticleNavigation() {
   cleanupArticleNavigation?.();
   cleanupArticleNavigation = undefined;
@@ -31,8 +28,6 @@ export function setupArticleNavigation() {
   let scrollFrame = 0;
   let resizeFrame = 0;
   let observer: IntersectionObserver | undefined;
-  let lockedHeadingId: string | undefined;
-  let unlockTimer = 0;
 
   const setActiveHeading = (id?: string) => {
     for (const link of tocLinks) {
@@ -48,11 +43,6 @@ export function setupArticleNavigation() {
   };
 
   const updateActiveHeading = () => {
-    if (lockedHeadingId) {
-      setActiveHeading(lockedHeadingId);
-      return;
-    }
-
     const readingLine = getHeaderOffset();
     let activeId = headings[0]?.id;
 
@@ -102,75 +92,31 @@ export function setupArticleNavigation() {
       "[data-heading-id]"
     );
     if (!link || !articlePage.contains(link)) return;
-
-    const headingId = link.dataset.headingId;
-    const heading = headingId ? document.getElementById(headingId) : null;
-    if (!heading || !headingId) return;
-
-    event.preventDefault();
-    const hash = `#${encodeURIComponent(headingId)}`;
-    if (window.location.hash !== hash) history.pushState(null, "", hash);
-
-    lockedHeadingId = headingId;
-    setActiveHeading(headingId);
-    heading.scrollIntoView({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "start",
-    });
-
     link.closest("details")?.removeAttribute("open");
-    window.clearTimeout(unlockTimer);
-    unlockTimer = window.setTimeout(
-      () => {
-        lockedHeadingId = undefined;
-        updateActiveHeading();
-      },
-      prefersReducedMotion() ? 0 : 700
-    );
-  };
-
-  const syncFromHash = () => {
-    let id = "";
-    try {
-      id = decodeURIComponent(window.location.hash.slice(1));
-    } catch {
-      id = window.location.hash.slice(1);
-    }
-    if (id && headingIds.includes(id)) setActiveHeading(id);
-    else updateActiveHeading();
-    requestScrollUpdate();
   };
 
   const handleBackToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
+      behavior: "auto",
     });
   };
 
   document.addEventListener("scroll", requestScrollUpdate, { passive: true });
   window.addEventListener("resize", handleResize, { passive: true });
-  window.addEventListener("pageshow", requestScrollUpdate);
-  window.addEventListener("hashchange", syncFromHash);
-  window.addEventListener("popstate", syncFromHash);
   articlePage.addEventListener("click", handleTocClick);
   backToTopButton?.addEventListener("click", handleBackToTop);
 
   updateBackToTopVisibility();
   createHeadingObserver();
-  window.requestAnimationFrame(syncFromHash);
 
   cleanupArticleNavigation = () => {
     document.removeEventListener("scroll", requestScrollUpdate);
     window.removeEventListener("resize", handleResize);
-    window.removeEventListener("pageshow", requestScrollUpdate);
-    window.removeEventListener("hashchange", syncFromHash);
-    window.removeEventListener("popstate", syncFromHash);
     articlePage.removeEventListener("click", handleTocClick);
     backToTopButton?.removeEventListener("click", handleBackToTop);
     observer?.disconnect();
     window.cancelAnimationFrame(scrollFrame);
     window.cancelAnimationFrame(resizeFrame);
-    window.clearTimeout(unlockTimer);
   };
 }
