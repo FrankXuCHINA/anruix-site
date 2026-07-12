@@ -4,7 +4,7 @@ import type { CollectionEntry } from "astro:content";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
-import { getPostReadingStats } from "@/utils/getPostReadingStats";
+import { countContentWords } from "@/utils/countContentWords";
 import { getPostUrl } from "@/utils/getPostPaths";
 import { toTransitionName } from "@/utils/toTransitionName";
 import config from "@/config";
@@ -39,7 +39,7 @@ const postUrl = getPostUrl(id, filePath, Astro.currentLocale);
 const date = dayjs(pubDatetime)
   .tz(timezone ?? config.site.timezone)
   .format("YYYY年M月D日");
-const { wordCount, readingMinutes } = getPostReadingStats(body);
+const wordCount = countContentWords(body);
 const formattedWordCount = new Intl.NumberFormat("zh-CN").format(wordCount);
 const placeholderText = title.trim().charAt(0) || "安";
 ---
@@ -48,10 +48,6 @@ const placeholderText = title.trim().charAt(0) || "安";
   class="post-card-item"
   data-post-card={searchable ? "" : undefined}
   data-search-url={searchable ? postUrl : undefined}
-  data-search-title={searchable ? title : undefined}
-  data-search-description={searchable ? description : undefined}
-  data-search-content={searchable ? body : undefined}
-  data-search-path={searchable ? postUrl : undefined}
   {hidden}
 >
   <article>
@@ -92,8 +88,6 @@ const placeholderText = title.trim().charAt(0) || "安";
           <span>{date}</span>
           <span aria-hidden="true">·</span>
           <span>{formattedWordCount} 字</span>
-          <span aria-hidden="true">·</span>
-          <span>约 {readingMinutes} 分钟</span>
         </div>
 
         <h3
@@ -124,18 +118,27 @@ const placeholderText = title.trim().charAt(0) || "安";
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 1.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.035);
     text-decoration: none;
     transition:
-      color 180ms ease,
       background-color 180ms ease,
       border-color 180ms ease,
-      transform 180ms ease;
+      box-shadow 180ms ease;
   }
 
   .post-card:hover {
     color: var(--foreground);
-    border-color: var(--accent);
-    transform: translateY(-2px);
+    border-color: color-mix(
+      in srgb,
+      var(--border) 78%,
+      var(--foreground) 22%
+    );
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .post-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
   }
 
   .post-card-cover {
@@ -152,6 +155,7 @@ const placeholderText = title.trim().charAt(0) || "安";
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
   }
 
   .post-card-placeholder {
@@ -169,7 +173,11 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   .post-card-content {
+    display: flex;
     min-width: 0;
+    flex-direction: column;
+    align-self: stretch;
+    justify-content: flex-start;
   }
 
   .post-card-meta {
@@ -194,23 +202,18 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   .post-card-title {
-    margin-top: 0.75rem;
+    margin-top: 0.5625rem;
     color: var(--foreground);
     font-size: 1.625rem;
     font-weight: 700;
     line-height: 1.24;
     letter-spacing: normal;
     overflow-wrap: anywhere;
-    transition: color 180ms ease;
-  }
-
-  .post-card:hover .post-card-title {
-    color: var(--accent);
   }
 
   .post-card-description {
     display: -webkit-box;
-    margin-top: 0.75rem;
+    margin-top: 0.625rem;
     overflow: hidden;
     color: var(--muted-foreground);
     font-size: 1rem;
@@ -224,12 +227,12 @@ const placeholderText = title.trim().charAt(0) || "安";
       display: grid;
       grid-template-columns: 13.5rem minmax(0, 1fr);
       gap: 1.5rem;
-      align-items: center;
+      align-items: start;
       padding: 1.375rem;
     }
 
-    .post-card-cover {
-      aspect-ratio: 3 / 2;
+    .post-card-content {
+      padding-top: 0.25rem;
     }
 
     .post-card-placeholder span {
@@ -242,13 +245,17 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .post-card,
-    .post-card-title {
+    .post-card {
       transition: none;
     }
+  }
 
-    .post-card:hover {
-      transform: none;
-    }
+  :global([data-theme="dark"]) .post-card:hover {
+    border-color: color-mix(
+      in srgb,
+      var(--border) 76%,
+      var(--foreground) 24%
+    );
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   }
 </style>

@@ -37,22 +37,6 @@ const pagefindBundlePath = getAssetPath("pagefind/");
       />
     </div>
 
-    <fieldset class="home-search-scopes">
-      <legend class="sr-only">搜索范围</legend>
-      {
-        [
-          ["title", "标题"],
-          ["description", "简介"],
-          ["content", "正文"],
-          ["path", "路径"],
-        ].map(([value, label]) => (
-          <label>
-            <input type="checkbox" name="scope" value={value} checked />
-            <span>{label}</span>
-          </label>
-        ))
-      }
-    </fieldset>
   </form>
 
   <div class="home-search-results" data-search-results hidden>
@@ -134,32 +118,6 @@ const pagefindBundlePath = getAssetPath("pagefind/");
     border-color: var(--accent);
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-  }
-
-  .home-search-scopes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    margin: 0.75rem 0 0;
-    padding: 0 0.25rem;
-    border: 0;
-  }
-
-  .home-search-scopes label {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--muted-foreground);
-    font-size: 0.875rem;
-    line-height: 1.5;
-    cursor: pointer;
-  }
-
-  .home-search-scopes input {
-    width: 0.95rem;
-    height: 0.95rem;
-    margin: 0;
-    accent-color: var(--accent);
   }
 
   .home-search-results {
