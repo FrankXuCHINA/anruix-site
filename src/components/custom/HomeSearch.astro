@@ -36,7 +36,6 @@ const pagefindBundlePath = getAssetPath("pagefind/");
         autocomplete="off"
       />
     </div>
-
   </form>
 
   <div class="home-search-results" data-search-results hidden>
@@ -45,11 +44,7 @@ const pagefindBundlePath = getAssetPath("pagefind/");
       <p data-search-status aria-live="polite"></p>
     </div>
     <ul class="post-card-list" data-search-list>
-      {
-        posts.map(post => (
-          <PostCard {post} searchable hidden />
-        ))
-      }
+      {posts.map(post => <PostCard {post} searchable hidden />)}
     </ul>
   </div>
 
@@ -121,7 +116,7 @@ const pagefindBundlePath = getAssetPath("pagefind/");
   }
 
   .home-search-results {
-    margin-top: 2.5rem;
+    margin-top: 2rem;
   }
 
   .home-search-results-heading {

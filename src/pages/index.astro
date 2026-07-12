@@ -42,11 +42,10 @@ const homePath = getRelativeLocaleUrl(locale, "");
     <div class="home-discovery">
       <HomeSearch posts={sortedPosts} mode="home" />
 
-      <div data-home-default>
+      <div data-search-default>
         {
           homePosts.length > 0 && (
-            <section id="recent-posts" class="home-recent-posts">
-              <h2>{t.home.recentPosts}</h2>
+            <section id="recent-posts" class="home-posts">
               <ul>
                 {homePosts.map((post, index) => (
                   <PostCard {post} priority={index === 0} />
@@ -85,25 +84,16 @@ const homePath = getRelativeLocaleUrl(locale, "");
 <style>
   .home-discovery {
     width: 100%;
-    max-width: 52rem;
+    max-width: 52.5rem;
     margin-inline: auto;
     padding-inline: 1rem;
   }
 
-  .home-recent-posts {
-    padding-block: 2.75rem 1rem;
+  .home-posts {
+    padding-block: 1.75rem 1rem;
   }
 
-  .home-recent-posts h2 {
-    margin-bottom: 1.5rem;
-    color: var(--foreground);
-    font-size: clamp(1.75rem, 4vw, 2rem);
-    font-weight: 700;
-    line-height: 1.25;
-    text-align: center;
-  }
-
-  .home-recent-posts ul {
+  .home-posts ul {
     display: flex;
     flex-direction: column;
     gap: 1.375rem;
@@ -121,8 +111,8 @@ const homePath = getRelativeLocaleUrl(locale, "");
       padding-inline: 1.25rem;
     }
 
-    .home-recent-posts {
-      padding-top: 3rem;
+    .home-posts {
+      padding-top: 2rem;
     }
   }
 </style>
