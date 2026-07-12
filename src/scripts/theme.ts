@@ -102,26 +102,5 @@ if (!runtimeWindow.__themeControllerInitialized) {
     applyTheme(syncedTheme ?? getSystemTheme());
   });
 
-  document.addEventListener("astro:after-swap", () => {
-    applyTheme(themeValue);
-  });
-
-  document.addEventListener("astro:before-swap", event => {
-    const newDocument = (event as { newDocument: Document }).newDocument;
-    const newRoot = newDocument.documentElement;
-    newRoot.dataset.theme = themeValue;
-    newRoot.classList.toggle("dark", themeValue === DARK);
-    newRoot.style.colorScheme = themeValue;
-
-    const currentThemeColor = document
-      .querySelector("meta[name='theme-color']")
-      ?.getAttribute("content");
-    if (currentThemeColor) {
-      newDocument
-        .querySelector("meta[name='theme-color']")
-        ?.setAttribute("content", currentThemeColor);
-    }
-  });
-
   applyTheme(themeValue);
 }

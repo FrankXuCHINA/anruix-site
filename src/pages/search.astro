@@ -25,12 +25,8 @@ const posts = getSortedPosts(await getCollection("posts"));
 <Layout title={`${t.pages.searchTitle} | ${config.site.title}`}>
   <Header />
 
-  <Main
-    pageTitle={t.pages.searchTitle}
-    pageDesc={t.pages.searchDesc}
-    variant="article-listing"
-  >
-    <HomeSearch {posts} mode="page" />
+  <Main pageTitle={t.pages.searchTitle} variant="article-listing">
+    <HomeSearch {posts} />
   </Main>
 
   <Footer />

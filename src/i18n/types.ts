@@ -43,7 +43,6 @@ export interface UIStrings {
     postsTitle: string;
 
     searchTitle: string;
-    searchDesc: string;
   };
   a11y: {
     skipToContent: string;
@@ -92,7 +91,6 @@ export interface UIStrings {
       error_search: string;
       filter_selected_one: string;
       filter_selected_many: string;
-      input_hint: string;
       loading: string;
     };
   };
