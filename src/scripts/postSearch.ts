@@ -1,5 +1,3 @@
-type SearchScope = "title" | "description" | "content" | "path";
-
 type PagefindResult = {
   data: () => Promise<{ url: string }>;
 };
@@ -10,9 +8,6 @@ type PagefindModule = {
 
 let cleanupPostSearch: (() => void) | undefined;
 let pagefindPromise: Promise<PagefindModule> | undefined;
-
-const normalizeText = (value: string) =>
-  value.toLocaleLowerCase("zh-CN").replace(/\s+/g, " ").trim();
 
 const normalizePath = (value: string) => {
   try {
@@ -41,9 +36,6 @@ export function setupPostSearch() {
 
   const form = root.querySelector<HTMLFormElement>("form");
   const input = root.querySelector<HTMLInputElement>("input[type='search']");
-  const scopes = Array.from(
-    root.querySelectorAll<HTMLInputElement>("input[name='scope']")
-  );
   const results = root.querySelector<HTMLElement>("[data-search-results]");
   const status = root.querySelector<HTMLElement>("[data-search-status]");
   const idle = root.querySelector<HTMLElement>("[data-search-idle]");
@@ -67,24 +59,6 @@ export function setupPostSearch() {
     idle.hidden = mode === "home" || searching;
   };
 
-  const selectedScopes = () =>
-    new Set(
-      scopes
-        .filter(scope => scope.checked)
-        .map(scope => scope.value as SearchScope)
-    );
-
-  const matchesSelectedFields = (
-    card: HTMLElement,
-    selected: Set<SearchScope>,
-    terms: string[]
-  ) =>
-    [...selected].some(scope => {
-      const key = `search${scope.charAt(0).toUpperCase()}${scope.slice(1)}`;
-      const value = normalizeText(card.dataset[key] ?? "");
-      return terms.every(term => value.includes(term));
-    });
-
   const runSearch = async () => {
     const query = input.value.trim();
     const currentRequest = ++requestId;
@@ -99,23 +73,11 @@ export function setupPostSearch() {
       return;
     }
 
-    const selected = selectedScopes();
     setDefaultVisibility(true);
     cards.forEach(card => (card.hidden = true));
 
-    if (selected.size === 0) {
-      status.textContent = "请至少选择一个搜索范围";
-      return;
-    }
-
     status.textContent = root.dataset.labelLoading ?? "正在加载";
-    const normalizedQuery = normalizeText(query);
-    const terms = normalizedQuery.split(" ").filter(Boolean);
-    const localMatches = cards.filter(card =>
-      matchesSelectedFields(card, selected, terms)
-    );
-
-    let rankedPaths: string[] = [];
+    let rankedPaths: string[];
     try {
       const pagefind = await loadPagefind(bundlePath);
       const response = await pagefind.search(query);
@@ -129,22 +91,21 @@ export function setupPostSearch() {
 
     if (currentRequest !== requestId) return;
 
-    const ranking = new Map(rankedPaths.map((path, index) => [path, index]));
-    localMatches.sort((a, b) => {
-      const aRank = ranking.get(normalizePath(a.dataset.searchUrl ?? ""));
-      const bRank = ranking.get(normalizePath(b.dataset.searchUrl ?? ""));
-      return (aRank ?? Number.MAX_SAFE_INTEGER) -
-        (bRank ?? Number.MAX_SAFE_INTEGER);
-    });
+    const cardsByPath = new Map(
+      cards.map(card => [normalizePath(card.dataset.searchUrl ?? ""), card])
+    );
+    const matchedCards = rankedPaths
+      .map(path => cardsByPath.get(path))
+      .filter((card): card is HTMLElement => Boolean(card));
 
     const list = root.querySelector<HTMLElement>("[data-search-list]");
-    localMatches.forEach(card => {
+    matchedCards.forEach(card => {
       card.hidden = false;
       list?.append(card);
     });
 
-    status.textContent = localMatches.length
-      ? `找到 ${localMatches.length} 篇文章`
+    status.textContent = matchedCards.length
+      ? `找到 ${matchedCards.length} 篇文章`
       : (root.dataset.labelEmpty ?? "未找到相关文章");
 
     if (mode === "page") {
@@ -162,7 +123,6 @@ export function setupPostSearch() {
   const preventSubmit = (event: SubmitEvent) => event.preventDefault();
   form.addEventListener("submit", preventSubmit);
   input.addEventListener("input", scheduleSearch);
-  scopes.forEach(scope => scope.addEventListener("change", scheduleSearch));
 
   if (mode === "page") {
     const query = new URLSearchParams(window.location.search).get("q");
@@ -175,9 +135,6 @@ export function setupPostSearch() {
   cleanupPostSearch = () => {
     form.removeEventListener("submit", preventSubmit);
     input.removeEventListener("input", scheduleSearch);
-    scopes.forEach(scope =>
-      scope.removeEventListener("change", scheduleSearch)
-    );
     window.clearTimeout(debounceTimer);
     requestId += 1;
   };
