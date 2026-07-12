@@ -1,0 +1,202 @@
+---
+import type { CollectionEntry } from "astro:content";
+import IconSearch from "@/assets/icons/IconSearch.svg";
+import PostCard from "./PostCard.astro";
+import { getAssetPath } from "@/utils/withBase";
+import { useTranslations } from "@/i18n";
+
+type Props = {
+  posts: CollectionEntry<"posts">[];
+  mode?: "home" | "page";
+};
+
+const { posts, mode = "home" } = Astro.props;
+const t = useTranslations(Astro.currentLocale);
+const pagefindBundlePath = getAssetPath("pagefind/");
+---
+
+<section
+  class="home-search"
+  data-post-search
+  data-search-mode={mode}
+  data-bundle-path={pagefindBundlePath}
+  data-label-loading={t.search.pagefind.loading}
+  data-label-empty={t.a11y.noResults}
+  data-label-input-hint={t.search.pagefind.input_hint}
+>
+  <form class="home-search-form" role="search">
+    <div class="home-search-input-wrap">
+      <IconSearch aria-hidden="true" class="home-search-icon" />
+      <input
+        class="home-search-input"
+        type="search"
+        name="q"
+        placeholder="搜索文章标题、描述或内容…"
+        aria-label="搜索文章"
+        autocomplete="off"
+      />
+    </div>
+
+    <fieldset class="home-search-scopes">
+      <legend class="sr-only">搜索范围</legend>
+      {
+        [
+          ["title", "标题"],
+          ["description", "简介"],
+          ["content", "正文"],
+          ["path", "路径"],
+        ].map(([value, label]) => (
+          <label>
+            <input type="checkbox" name="scope" value={value} checked />
+            <span>{label}</span>
+          </label>
+        ))
+      }
+    </fieldset>
+  </form>
+
+  <div class="home-search-results" data-search-results hidden>
+    <div class="home-search-results-heading">
+      <h2>{t.search.pagefind.results_label}</h2>
+      <p data-search-status aria-live="polite"></p>
+    </div>
+    <ul class="post-card-list" data-search-list>
+      {
+        posts.map(post => (
+          <PostCard {post} searchable hidden />
+        ))
+      }
+    </ul>
+  </div>
+
+  <p
+    class="home-search-idle-message"
+    data-search-idle
+    aria-live="polite"
+    hidden={mode === "home"}
+  >
+    {t.search.pagefind.input_hint}
+  </p>
+</section>
+
+<script>
+  import { setupPostSearch } from "@/scripts/postSearch";
+
+  setupPostSearch();
+  document.addEventListener("astro:page-load", setupPostSearch);
+</script>
+
+<style>
+  .home-search {
+    width: 100%;
+  }
+
+  .home-search-form {
+    margin: 0;
+  }
+
+  .home-search-input-wrap {
+    position: relative;
+  }
+
+  .home-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    color: var(--muted-foreground);
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  .home-search-input {
+    width: 100%;
+    height: 2.875rem;
+    padding: 0 2.75rem;
+    color: var(--foreground);
+    font-size: 1rem;
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    appearance: none;
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .home-search-input::placeholder {
+    color: var(--subtle-foreground);
+    opacity: 1;
+  }
+
+  .home-search-input:focus-visible {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .home-search-scopes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 0.75rem 0 0;
+    padding: 0 0.25rem;
+    border: 0;
+  }
+
+  .home-search-scopes label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    cursor: pointer;
+  }
+
+  .home-search-scopes input {
+    width: 0.95rem;
+    height: 0.95rem;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .home-search-results {
+    margin-top: 2.5rem;
+  }
+
+  .home-search-results-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .home-search-results-heading h2 {
+    color: var(--foreground);
+    font-size: clamp(1.5rem, 4vw, 1.75rem);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .home-search-results-heading p,
+  .home-search-idle-message {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+
+  .home-search-idle-message {
+    margin-top: 1rem;
+  }
+
+  .post-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.375rem;
+    margin: 0;
+    padding: 0;
+  }
+</style>
