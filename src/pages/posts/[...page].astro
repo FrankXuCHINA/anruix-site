@@ -5,6 +5,7 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Main from "@/components/Main.astro";
 import PostCard from "@/components/custom/PostCard.astro";
+import HomeSearch from "@/components/custom/HomeSearch.astro";
 import Footer from "@/components/Footer.astro";
 import Pagination from "@/components/Pagination.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
@@ -20,6 +21,9 @@ const { page } = Astro.props;
 
 const locale = Astro.currentLocale ?? config.site.lang;
 const t = useTranslations(locale);
+const searchPosts = getSortedPosts(
+  await getCollection("posts", ({ data }) => !data.draft)
+);
 ---
 
 <Layout title={`${t.pages.postsTitle} | ${config.site.title}`}>
@@ -28,9 +32,11 @@ const t = useTranslations(locale);
   <Main
     pageTitle={t.pages.postsTitle}
     pageDesc={t.pages.postsDesc}
-    class="posts-page max-w-[60rem]"
+    class="posts-page max-w-[56rem]"
   >
-    <ul class="post-card-list">
+    <HomeSearch posts={searchPosts} mode="home" />
+
+    <ul class="post-card-list" data-search-default>
       {
         page.data.map((post, index) => (
           <PostCard {post} priority={index === 0} />
@@ -39,12 +45,18 @@ const t = useTranslations(locale);
     </ul>
   </Main>
 
-  <Pagination {page} />
+  <div data-search-default>
+    <Pagination {page} />
+  </div>
 
   <Footer noMarginTop={page.lastPage > 1} />
 </Layout>
 
 <style>
+  :global(.posts-page) {
+    padding-top: clamp(2.25rem, 6vw, 4rem);
+  }
+
   :global(.posts-page > h1) {
     color: var(--foreground);
     font-size: clamp(2.125rem, 6vw, 2.875rem);
@@ -55,7 +67,7 @@ const t = useTranslations(locale);
 
   :global(.posts-page > h1 + p) {
     max-width: 42rem;
-    margin: 0.75rem auto 3rem;
+    margin: 0.75rem auto 2.25rem;
     color: var(--muted-foreground);
     font-size: clamp(1rem, 2.5vw, 1.125rem);
     line-height: 1.6;
@@ -66,7 +78,7 @@ const t = useTranslations(locale);
     display: flex;
     flex-direction: column;
     gap: 1.375rem;
-    margin: 0;
+    margin: 2rem 0 0;
     padding: 0;
   }
 </style>

@@ -42,8 +42,8 @@ export function setupPostSearch() {
   const cards = Array.from(
     root.querySelectorAll<HTMLElement>("[data-post-card]")
   );
-  const homeDefault = document.querySelector<HTMLElement>(
-    "[data-home-default]"
+  const defaultContent = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-search-default]")
   );
 
   if (!form || !input || !results || !status || !idle) return;
@@ -54,7 +54,7 @@ export function setupPostSearch() {
   let requestId = 0;
 
   const setDefaultVisibility = (searching: boolean) => {
-    if (homeDefault) homeDefault.hidden = searching;
+    defaultContent.forEach(element => (element.hidden = searching));
     results.hidden = !searching;
     idle.hidden = mode === "home" || searching;
   };
