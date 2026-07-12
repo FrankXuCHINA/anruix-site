@@ -4,15 +4,12 @@ export default {
   nav: {
     home: "首页",
     posts: "文章",
-    tags: "标签",
     about: "关于",
-    archives: "归档",
     search: "搜索",
   },
   post: {
     publishedAt: "发布于",
     updatedAt: "更新于",
-    tagLabel: "标签",
     backToTop: "返回顶部",
     tableOfContents: "目录",
     tocLabel: "文章目录",
@@ -46,17 +43,8 @@ export default {
     allRightsReserved: "保留所有权利。",
   },
   pages: {
-    tagTitle: "标签",
-    tagDesc: "包含该标签的全部文章：",
-
-    tagsTitle: "标签",
-    tagsDesc: "浏览全部文章标签。",
-
-    postsTitle: "文章",
-    postsDesc: "浏览全部文章。",
-
-    archivesTitle: "归档",
-    archivesDesc: "按时间浏览全部文章。",
+    postsTitle: "全部文章",
+    postsDesc: "记录摄影、影像、技术与生活中的所见所想。",
 
     searchTitle: "搜索",
     searchDesc: "搜索站内文章。",

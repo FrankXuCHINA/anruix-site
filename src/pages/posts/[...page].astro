@@ -3,7 +3,6 @@ import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
 import Main from "@/components/Main.astro";
 import PostCard from "@/components/custom/PostCard.astro";
 import Footer from "@/components/Footer.astro";
@@ -26,12 +25,10 @@ const t = useTranslations(locale);
 <Layout title={`${t.pages.postsTitle} | ${config.site.title}`}>
   <Header />
 
-  <Breadcrumb />
-
   <Main
     pageTitle={t.pages.postsTitle}
     pageDesc={t.pages.postsDesc}
-    class="max-w-[60rem]"
+    class="posts-page max-w-[60rem]"
   >
     <ul class="post-card-list">
       {
@@ -48,6 +45,23 @@ const t = useTranslations(locale);
 </Layout>
 
 <style>
+  :global(.posts-page > h1) {
+    color: var(--foreground);
+    font-size: clamp(2.125rem, 6vw, 2.875rem);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  :global(.posts-page > h1 + p) {
+    max-width: 42rem;
+    margin: 0.75rem auto 3rem;
+    color: var(--muted-foreground);
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    line-height: 1.6;
+    text-align: center;
+  }
+
   .post-card-list {
     display: flex;
     flex-direction: column;

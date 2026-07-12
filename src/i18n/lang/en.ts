@@ -4,15 +4,12 @@ export default {
   nav: {
     home: "Home",
     posts: "Posts",
-    tags: "Tags",
     about: "About",
-    archives: "Archives",
     search: "Search",
   },
   post: {
     publishedAt: "Published at",
     updatedAt: "Updated",
-    tagLabel: "Tags",
     backToTop: "Back to top",
     tableOfContents: "Table of contents",
     tocLabel: "Article table of contents",
@@ -46,17 +43,8 @@ export default {
     allRightsReserved: "All rights reserved.",
   },
   pages: {
-    tagTitle: "Tag",
-    tagDesc: "All the articles with the tag",
-
-    tagsTitle: "Tags",
-    tagsDesc: "All the tags used in posts.",
-
-    postsTitle: "Posts",
-    postsDesc: "All the articles I've posted.",
-
-    archivesTitle: "Archives",
-    archivesDesc: "All the articles I've archived.",
+    postsTitle: "All Posts",
+    postsDesc: "Notes on photography, imagery, technology, and everyday life.",
 
     searchTitle: "Search",
     searchDesc: "Search any article ...",

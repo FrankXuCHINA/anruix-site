@@ -21,13 +21,7 @@ import config from "./astro-paper.config";
 
 export default defineConfig({
   site: config.site.url,
-  integrations: [
-    mdx(),
-    sitemap({
-      filter: page =>
-        config.features?.showArchives !== false || !page.endsWith("/archives/"),
-    }),
-  ],
+  integrations: [mdx(), sitemap()],
   i18n: {
     locales: ["zh-CN"],
     defaultLocale: "zh-CN",
