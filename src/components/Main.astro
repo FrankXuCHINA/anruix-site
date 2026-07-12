@@ -6,9 +6,16 @@ type Props = {
   pageTitle: string | [string, string];
   pageDesc?: string;
   class?: string;
+  variant?: "default" | "article-listing";
 };
 
-const { pageTitle, pageDesc, class: className } = Astro.props;
+const {
+  pageTitle,
+  pageDesc,
+  class: className,
+  variant = "default",
+} = Astro.props;
+const isArticleListing = variant === "article-listing";
 
 const locale = Astro.currentLocale ?? config.site.lang;
 const backUrl = config.features.showBackButton
@@ -19,10 +26,30 @@ const backUrl = config.features.showBackButton
 <main
   data-backUrl={backUrl}
   id="main-content"
-  class:list={["app-layout pb-4", className]}
+  class:list={[
+    "app-layout pb-4",
+    className,
+    { "article-listing-page": isArticleListing },
+  ]}
 >
-  <h1 class="text-2xl font-semibold sm:text-3xl">{pageTitle}</h1>
-  <p class="text-muted-foreground mt-2 mb-6">{pageDesc}</p>
+  <h1
+    class:list={[
+      isArticleListing
+        ? "article-listing-title"
+        : "text-2xl font-semibold sm:text-3xl",
+    ]}
+  >
+    {pageTitle}
+  </h1>
+  <p
+    class:list={[
+      isArticleListing
+        ? "article-listing-description"
+        : "text-muted-foreground mt-2 mb-6",
+    ]}
+  >
+    {pageDesc}
+  </p>
   <slot />
 </main>
 
@@ -36,3 +63,33 @@ const backUrl = config.features.showBackButton
     }
   });
 </script>
+
+<style>
+  .article-listing-page {
+    max-width: var(--article-list-width);
+    padding-top: clamp(2.25rem, 6vw, 4rem);
+  }
+
+  .article-listing-title {
+    color: var(--foreground);
+    font-size: clamp(2.125rem, 6vw, 2.875rem);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .article-listing-description {
+    max-width: 42rem;
+    margin: 0.75rem auto 2.5rem;
+    color: var(--muted-foreground);
+    font-size: clamp(1rem, 2.5vw, 1.125rem);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .article-listing-page {
+      padding-inline: 1.25rem;
+    }
+  }
+</style>

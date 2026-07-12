@@ -39,14 +39,14 @@ const homePath = getRelativeLocaleUrl(locale, "");
   >
     <ProfileHero />
 
-    <div class="home-discovery">
+    <div class="article-listing-layout">
       <HomeSearch posts={sortedPosts} mode="home" />
 
       <div data-search-default>
         {
           homePosts.length > 0 && (
             <section id="recent-posts" class="home-posts">
-              <ul>
+              <ul class="article-card-list">
                 {homePosts.map((post, index) => (
                   <PostCard {post} priority={index === 0} />
                 ))}
@@ -82,23 +82,8 @@ const homePath = getRelativeLocaleUrl(locale, "");
 </script>
 
 <style>
-  .home-discovery {
-    width: 100%;
-    max-width: 52.5rem;
-    margin-inline: auto;
-    padding-inline: 1rem;
-  }
-
   .home-posts {
     padding-block: 1.75rem 1rem;
-  }
-
-  .home-posts ul {
-    display: flex;
-    flex-direction: column;
-    gap: 1.375rem;
-    margin: 0;
-    padding: 0;
   }
 
   .home-all-posts {
@@ -107,10 +92,6 @@ const homePath = getRelativeLocaleUrl(locale, "");
   }
 
   @media (min-width: 640px) {
-    .home-discovery {
-      padding-inline: 1.25rem;
-    }
-
     .home-posts {
       padding-top: 2rem;
     }

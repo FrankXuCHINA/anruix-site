@@ -43,10 +43,9 @@ export default {
   },
   pages: {
     postsTitle: "全部文章",
-    postsDesc: "记录摄影、影像、技术与生活中的所见所想。",
 
-    searchTitle: "搜索",
-    searchDesc: "搜索站内文章。",
+    searchTitle: "搜索文章",
+    searchDesc: "搜索站内文章标题、描述或正文。",
   },
   a11y: {
     skipToContent: "跳转到正文",

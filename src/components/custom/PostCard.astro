@@ -105,8 +105,8 @@ const placeholderText = title.trim().charAt(0) || "安";
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 1.25rem;
-    padding: 1.25rem;
+    gap: var(--article-card-gap);
+    padding: var(--article-card-padding);
     color: var(--foreground);
     background: var(--card);
     border: 1px solid var(--border);
@@ -214,10 +214,10 @@ const placeholderText = title.trim().charAt(0) || "安";
   @media (min-width: 768px) {
     .post-card {
       display: grid;
-      grid-template-columns: 13rem minmax(0, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: var(--article-cover-width) minmax(0, 1fr);
+      gap: var(--article-card-gap);
       align-items: start;
-      padding: 1.25rem;
+      padding: var(--article-card-padding);
     }
 
     .post-card-cover {

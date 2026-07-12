@@ -43,10 +43,9 @@ export default {
   },
   pages: {
     postsTitle: "All Posts",
-    postsDesc: "Notes on photography, imagery, technology, and everyday life.",
 
-    searchTitle: "Search",
-    searchDesc: "Search any article ...",
+    searchTitle: "Search Posts",
+    searchDesc: "Search post titles, descriptions, or content.",
   },
   a11y: {
     skipToContent: "Skip to content",
