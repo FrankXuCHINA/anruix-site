@@ -5,9 +5,10 @@ import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Card from "@/components/Card.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import ProfileHero from "@/components/custom/ProfileHero.astro";
+import HomeSearch from "@/components/custom/HomeSearch.astro";
+import PostCard from "@/components/custom/PostCard.astro";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import { useTranslations } from "@/i18n";
 import config from "@/config";
@@ -21,6 +22,10 @@ const posts = await getCollection("posts");
 const sortedPosts = getSortedPosts(posts);
 const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+const homePosts = [...featuredPosts, ...recentPosts].slice(
+  0,
+  postsConfig.perIndex
+);
 const homePath = getRelativeLocaleUrl(locale, "");
 ---
 
@@ -30,50 +35,37 @@ const homePath = getRelativeLocaleUrl(locale, "");
     id="main-content"
     data-layout="index"
     data-home-path={homePath}
-    class="app-layout"
+    class="w-full"
   >
     <ProfileHero />
 
-    {
-      featuredPosts.length > 0 && (
-        <section
-          id="featured"
-          class:list={[
-            "pt-12 pb-6",
-            { "border-border border-b": recentPosts.length > 0 },
-          ]}
-        >
-          <h2 class="text-2xl font-semibold">{t.home.featured}</h2>
-          <ul>
-            {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+    <div class="home-discovery">
+      <HomeSearch posts={sortedPosts} mode="home" />
 
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold">{t.home.recentPosts}</h2>
-          <ul>
-            {recentPosts.slice(0, postsConfig.perIndex).map(data => (
-              <Card variant="h3" {...data} />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+      <div data-home-default>
+        {
+          homePosts.length > 0 && (
+            <section id="recent-posts" class="home-recent-posts">
+              <h2>{t.home.recentPosts}</h2>
+              <ul>
+                {homePosts.map((post, index) => (
+                  <PostCard {post} priority={index === 0} />
+                ))}
+              </ul>
+            </section>
+          )
+        }
 
-    <div class="my-8 text-center">
-      <LinkButton
-        class="button-primary"
-        href={getRelativeLocaleUrl(locale, "posts")}
-      >
-        {t.home.allPosts}
-        <IconArrowRight class="inline-block rtl:-rotate-180" />
-      </LinkButton>
+        <div class="home-all-posts">
+          <LinkButton
+            class="button-primary"
+            href={getRelativeLocaleUrl(locale, "posts")}
+          >
+            {t.home.allPosts}
+            <IconArrowRight class="inline-block rtl:-rotate-180" />
+          </LinkButton>
+        </div>
+      </div>
     </div>
   </main>
   <Footer />
@@ -89,3 +81,47 @@ const homePath = getRelativeLocaleUrl(locale, "");
     }
   });
 </script>
+
+<style>
+  .home-discovery {
+    width: 100%;
+    max-width: 60rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  .home-recent-posts {
+    padding-block: 2.75rem 1rem;
+  }
+
+  .home-recent-posts h2 {
+    margin-bottom: 1.25rem;
+    color: var(--foreground);
+    font-size: clamp(1.5rem, 4vw, 1.75rem);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .home-recent-posts ul {
+    display: flex;
+    flex-direction: column;
+    gap: 1.375rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .home-all-posts {
+    margin-block: 2rem 3rem;
+    text-align: center;
+  }
+
+  @media (min-width: 640px) {
+    .home-discovery {
+      padding-inline: 1.25rem;
+    }
+
+    .home-recent-posts {
+      padding-top: 3rem;
+    }
+  }
+</style>
