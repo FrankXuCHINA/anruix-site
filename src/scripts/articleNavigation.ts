@@ -18,16 +18,31 @@ export function setupArticleNavigation() {
   const headings = headingIds
     .map(id => document.getElementById(id))
     .filter((heading): heading is HTMLElement => heading !== null);
-  const backToTopButton = articlePage.querySelector<HTMLButtonElement>(
-    "[data-article-back-to-top]"
-  );
-  const backToTopContainer = backToTopButton?.closest<HTMLElement>(
-    ".article-back-to-top"
-  );
-
-  let scrollFrame = 0;
   let resizeFrame = 0;
   let observer: IntersectionObserver | undefined;
+
+  const keepActiveLinkVisible = (id: string) => {
+    const tocContainers =
+      articlePage.querySelectorAll<HTMLElement>("[data-article-toc]");
+
+    for (const toc of tocContainers) {
+      if (toc.clientHeight === 0) continue;
+      const activeLink = Array.from(
+        toc.querySelectorAll<HTMLAnchorElement>("[data-heading-id]")
+      ).find(link => link.dataset.headingId === id);
+      if (!activeLink) continue;
+
+      const tocRect = toc.getBoundingClientRect();
+      const linkRect = activeLink.getBoundingClientRect();
+      const edgeOffset = 4;
+
+      if (linkRect.top < tocRect.top + edgeOffset) {
+        toc.scrollTop += linkRect.top - tocRect.top - edgeOffset;
+      } else if (linkRect.bottom > tocRect.bottom - edgeOffset) {
+        toc.scrollTop += linkRect.bottom - tocRect.bottom + edgeOffset;
+      }
+    }
+  };
 
   const setActiveHeading = (id?: string) => {
     for (const link of tocLinks) {
@@ -35,6 +50,7 @@ export function setupArticleNavigation() {
       if (isActive) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     }
+    if (id) keepActiveLinkVisible(id);
   };
 
   const getHeaderOffset = () => {
@@ -55,16 +71,6 @@ export function setupArticleNavigation() {
     }
 
     setActiveHeading(activeId);
-  };
-
-  const updateBackToTopVisibility = () => {
-    scrollFrame = 0;
-    backToTopContainer?.classList.toggle("is-visible", window.scrollY >= 300);
-  };
-
-  const requestScrollUpdate = () => {
-    if (scrollFrame) return;
-    scrollFrame = window.requestAnimationFrame(updateBackToTopVisibility);
   };
 
   const createHeadingObserver = () => {
@@ -95,28 +101,30 @@ export function setupArticleNavigation() {
     link.closest("details")?.removeAttribute("open");
   };
 
-  const handleBackToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "auto",
-    });
+  const syncFromHash = () => {
+    const rawHash = window.location.hash.slice(1);
+    let hashId = rawHash;
+    try {
+      hashId = decodeURIComponent(rawHash);
+    } catch {
+      // Keep the raw value for malformed external hashes.
+    }
+    if (hashId && headingIds.includes(hashId)) setActiveHeading(hashId);
+    else updateActiveHeading();
   };
 
-  document.addEventListener("scroll", requestScrollUpdate, { passive: true });
   window.addEventListener("resize", handleResize, { passive: true });
+  window.addEventListener("hashchange", syncFromHash);
   articlePage.addEventListener("click", handleTocClick);
-  backToTopButton?.addEventListener("click", handleBackToTop);
 
-  updateBackToTopVisibility();
   createHeadingObserver();
+  syncFromHash();
 
   cleanupArticleNavigation = () => {
-    document.removeEventListener("scroll", requestScrollUpdate);
     window.removeEventListener("resize", handleResize);
+    window.removeEventListener("hashchange", syncFromHash);
     articlePage.removeEventListener("click", handleTocClick);
-    backToTopButton?.removeEventListener("click", handleBackToTop);
     observer?.disconnect();
-    window.cancelAnimationFrame(scrollFrame);
     window.cancelAnimationFrame(resizeFrame);
   };
 }
