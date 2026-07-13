@@ -12,7 +12,7 @@ description: "关于 Anruix 和安锐的小站。"
 ## 当前保留的主题能力
 
 - Markdown 与 MDX
-- 标签、归档、分页和目录
+- 标签、归档和分页
 - 静态搜索、RSS、Sitemap 和 SEO
 - 深色与浅色模式
 - 草稿文章
