@@ -41,11 +41,11 @@ const isActive = (path: string) => {
 </a>
 
 <header class="site-header">
-  <nav class="site-nav">
-    <div class="site-nav-inner flex flex-wrap items-center">
+  <nav class="site-nav" aria-label="主导航">
+    <div class="site-nav-inner flex items-center">
       <a
         href={getRelativeLocaleUrl(locale, "")}
-        class="text-foreground hover:text-foreground focus-visible:text-foreground active:text-foreground visited:text-foreground order-1 flex min-h-9 items-center gap-2.5 font-semibold whitespace-nowrap no-underline transition-opacity duration-150 hover:opacity-[0.78]"
+        class="text-foreground hover:text-foreground focus-visible:text-foreground active:text-foreground visited:text-foreground flex min-h-9 items-center gap-2.5 font-semibold whitespace-nowrap no-underline transition-opacity duration-150 hover:opacity-[0.78]"
         aria-label={t.notFound.goHome}
         aria-current={isHome ? "page" : undefined}
       >
@@ -60,9 +60,28 @@ const isActive = (path: string) => {
         <span class="text-base sm:text-[1.0625rem]">{site.title}</span>
       </a>
 
-      <div
-        class="order-2 ms-auto flex items-center gap-1 sm:order-3 sm:ms-2 sm:gap-1.5"
-      >
+      <ul class="site-nav-links ms-auto hidden items-center gap-1 sm:flex">
+        <li>
+          <a
+            href={getRelativeLocaleUrl(locale, "posts")}
+            class:list={{ "active-nav": isActive("/posts") }}
+            aria-current={isActive("/posts") ? "page" : undefined}
+          >
+            {t.nav.posts}
+          </a>
+        </li>
+        <li>
+          <a
+            href={getRelativeLocaleUrl(locale, "about")}
+            class:list={{ "active-nav": isActive("/about") }}
+            aria-current={isActive("/about") ? "page" : undefined}
+          >
+            {t.nav.about}
+          </a>
+        </li>
+      </ul>
+
+      <div class="ms-auto flex items-center gap-1 sm:ms-2 sm:gap-1.5">
         {
           features.search !== false && (
             <LinkButton
@@ -89,7 +108,7 @@ const isActive = (path: string) => {
           class="hover:text-accent flex size-9 items-center justify-center border-0 bg-transparent p-0 transition-colors duration-150 sm:hidden"
           aria-label={t.a11y.openMenu}
           aria-expanded="false"
-          aria-controls="menu-items"
+          aria-controls="mobile-menu-layer"
           data-label-open={t.a11y.openMenu}
           data-label-close={t.a11y.closeMenu}
         >
@@ -97,11 +116,12 @@ const isActive = (path: string) => {
           <IconX id="close-icon" aria-hidden="true" class="hidden size-5" />
         </button>
       </div>
+    </div>
+  </nav>
 
-      <ul
-        id="menu-items"
-        class="[&>li>a]:hover:text-accent order-3 hidden w-full basis-full grid-cols-1 gap-1 pt-2 pb-3 sm:order-2 sm:ms-auto sm:flex sm:w-auto sm:basis-auto sm:items-center sm:gap-1 sm:p-0 [&>li>a]:flex [&>li>a]:min-h-9 [&>li>a]:items-center [&>li>a]:rounded-lg [&>li>a]:px-3 [&>li>a]:font-medium [&>li>a]:transition-colors [&>li>a]:duration-150 sm:[&>li>a]:justify-center sm:[&>li>a]:px-2"
-      >
+  <div id="mobile-menu-layer" class="mobile-menu-layer sm:hidden" hidden>
+    <nav class="mobile-menu-panel" aria-label="移动导航">
+      <ul id="menu-items" class="mobile-menu-list">
         <li>
           <a
             href={getRelativeLocaleUrl(locale, "posts")}
@@ -121,47 +141,62 @@ const isActive = (path: string) => {
           </a>
         </li>
       </ul>
-    </div>
-  </nav>
+    </nav>
+  </div>
 </header>
 
 <script>
   function setupMobileMenu() {
     const menuBtn = document.querySelector<HTMLButtonElement>("#menu-btn");
-    const menuItems = document.querySelector<HTMLElement>("#menu-items");
+    const menuLayer = document.querySelector<HTMLElement>("#mobile-menu-layer");
+    const menuPanel =
+      menuLayer?.querySelector<HTMLElement>(".mobile-menu-panel");
     const menuIcon = document.querySelector<HTMLElement>("#menu-icon");
     const closeIcon = document.querySelector<HTMLElement>("#close-icon");
-    const nav = menuBtn?.closest("nav");
 
-    if (!menuBtn || !menuItems || !menuIcon || !closeIcon || !nav) return;
+    if (!menuBtn || !menuLayer || !menuPanel || !menuIcon || !closeIcon) return;
     if (menuBtn.dataset.menuBound === "true") return;
     menuBtn.dataset.menuBound = "true";
 
     const openLabel = menuBtn.dataset.labelOpen ?? "打开菜单";
     const closeLabel = menuBtn.dataset.labelClose ?? "关闭菜单";
+    const desktopMedia = window.matchMedia("(min-width: 640px)");
 
-    const setMenuOpen = (open: boolean) => {
+    const setMenuOpen = (open: boolean, restoreFocus = false) => {
+      const wasOpen = menuBtn.getAttribute("aria-expanded") === "true";
       menuBtn.setAttribute("aria-expanded", String(open));
       menuBtn.setAttribute("aria-label", open ? closeLabel : openLabel);
-      menuItems.classList.toggle("hidden", !open);
-      menuItems.classList.toggle("grid", open);
+      menuLayer.hidden = !open;
       menuIcon.classList.toggle("hidden", open);
       closeIcon.classList.toggle("hidden", !open);
+
+      if (wasOpen && !open && restoreFocus) menuBtn.focus();
     };
 
     menuBtn.addEventListener("click", () => {
       setMenuOpen(menuBtn.getAttribute("aria-expanded") !== "true");
     });
 
-    menuItems.addEventListener("click", event => {
+    menuLayer.addEventListener("click", event => {
       if ((event.target as Element).closest("a")) setMenuOpen(false);
     });
 
-    nav.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
+    document.addEventListener("pointerdown", event => {
+      if (menuBtn.getAttribute("aria-expanded") !== "true") return;
+      const target = event.target as Node;
+      if (!menuPanel.contains(target) && !menuBtn.contains(target)) {
         setMenuOpen(false);
-        menuBtn.focus();
       }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        setMenuOpen(false, true);
+      }
+    });
+
+    desktopMedia.addEventListener("change", event => {
+      if (event.matches) setMenuOpen(false);
     });
   }
 

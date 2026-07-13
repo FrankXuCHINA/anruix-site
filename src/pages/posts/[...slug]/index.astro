@@ -75,6 +75,7 @@ const {
 } = post.data;
 
 const { Content, headings } = await render(post);
+const hasToc = headings.some(({ depth }) => depth >= 2 && depth <= 4);
 const publishedDate = dayjs(pubDatetime)
   .tz(timezone ?? config.site.timezone)
   .format("YYYY年M月D日");
@@ -132,7 +133,7 @@ const ogImage = ogImageUrl
         </div>
       </header>
 
-      <ArticleToc {headings} variant="mobile" />
+      {hasToc && <ArticleToc {headings} variant="mobile" />}
 
       <article
         id="article"
@@ -154,13 +155,18 @@ const ogImage = ogImageUrl
 
       <EditPost class="sm:hidden" {hideEditPost} {post} />
 
+      <BackToTopButton />
+
       <AdjacentPostNav {prevPost} {nextPost} />
     </div>
 
-    <aside class="article-fixed-rail">
-      <ArticleToc {headings} variant="desktop" />
-      <BackToTopButton />
-    </aside>
+    {
+      hasToc && (
+        <aside class="article-fixed-rail">
+          <ArticleToc {headings} variant="desktop" />
+        </aside>
+      )
+    }
   </main>
   <Footer />
 </PostLayout>

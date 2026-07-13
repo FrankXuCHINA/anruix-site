@@ -9,7 +9,7 @@ type Props = {
 
 const { headings, variant } = Astro.props;
 const t = useTranslations(Astro.currentLocale);
-const tocHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
+const tocHeadings = headings.filter(({ depth }) => depth >= 2 && depth <= 4);
 ---
 
 {
