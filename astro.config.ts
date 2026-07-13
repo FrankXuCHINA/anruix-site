@@ -7,9 +7,7 @@ import {
 import tailwindcss from "@tailwindcss/vite";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import { unified } from "@astrojs/markdown-remark";
-import remarkToc from "remark-toc";
-import remarkCollapse from "remark-collapse";
+import { unified, type RehypePlugin } from "@astrojs/markdown-remark";
 import rehypeCallouts from "rehype-callouts";
 import {
   transformerNotationDiff,
@@ -31,13 +29,9 @@ export default defineConfig({
   },
   markdown: {
     processor: unified({
-      remarkPlugins: [
-        [remarkToc, { heading: "目录|Table of contents" }],
-        [remarkCollapse, { test: "目录|Table of contents" }],
-      ],
       rehypePlugins: [
         [
-          rehypeCallouts,
+          rehypeCallouts as RehypePlugin,
           {
             callouts: {
               note: { title: "备注" },
