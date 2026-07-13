@@ -103,4 +103,7 @@ if (!runtimeWindow.__themeControllerInitialized) {
   });
 
   applyTheme(themeValue);
+  document
+    .querySelector<HTMLButtonElement>("#theme-toggle")
+    ?.setAttribute("data-theme-ready", "true");
 }
