@@ -9,8 +9,6 @@ export interface UIStrings {
     publishedAt: string;
     updatedAt: string;
     backToTop: string;
-    tableOfContents: string;
-    tocLabel: string;
     editPage: string;
     previousPost: string;
     nextPost: string;
