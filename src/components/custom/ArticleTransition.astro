@@ -168,15 +168,15 @@
       style.textContent = `
         ::view-transition-group(${name}) {
           z-index: 2;
-          animation-duration: 300ms;
+          animation-duration: 320ms;
           animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         ::view-transition-image-pair(${name}) {
           overflow: clip;
           background: var(--background);
-          box-shadow: 0 18px 56px rgb(0 0 0 / 0.16);
-          animation: article-transition-radius-${direction} 300ms
+          box-shadow: 0 12px 36px rgb(0 0 0 / 0.14);
+          animation: article-transition-radius-${direction} 320ms
             cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
@@ -189,12 +189,12 @@
         }
 
         ::view-transition-old(${name}) {
-          animation: article-transition-snapshot-out 300ms
+          animation: article-transition-snapshot-out 320ms
             cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         ::view-transition-new(${name}) {
-          animation: article-transition-snapshot-in 300ms
+          animation: article-transition-snapshot-in 320ms
             cubic-bezier(0.22, 1, 0.36, 1) both;
         }
       `;
@@ -436,14 +436,12 @@
         skipTransition(event.viewTransition);
         return;
       }
-      event.viewTransition.ready.then(() => {
-        if (info.side === "detail") clearSurface(getSurface());
-        else info.card.style.viewTransitionName = "";
-      }, cleanup);
+      event.viewTransition.ready.catch(cleanup);
       event.viewTransition.finished.then(cleanup, cleanup);
     });
 
     window.addEventListener("pageshow", () => {
+      if (document.documentElement.dataset.articleTransition) return;
       outgoingCleanup?.();
       outgoingCleanup = null;
       pendingCard = null;
