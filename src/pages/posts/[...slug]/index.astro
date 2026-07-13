@@ -3,7 +3,6 @@ import { type CollectionEntry, getCollection, render } from "astro:content";
 import PostLayout from "@/layouts/PostLayout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import ArticleToc from "@/components/custom/ArticleToc.astro";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
@@ -74,8 +73,7 @@ const {
   hideEditPost,
 } = post.data;
 
-const { Content, headings } = await render(post);
-const hasToc = headings.some(({ depth }) => depth >= 2 && depth <= 4);
+const { Content } = await render(post);
 const publishedDate = dayjs(pubDatetime)
   .tz(timezone ?? config.site.timezone)
   .format("YYYY年M月D日");
@@ -133,8 +131,6 @@ const ogImage = ogImageUrl
         </div>
       </header>
 
-      {hasToc && <ArticleToc {headings} variant="mobile" />}
-
       <article
         id="article"
         data-copy-label={t.post.copyCode}
@@ -159,14 +155,6 @@ const ogImage = ogImageUrl
 
       <AdjacentPostNav {prevPost} {nextPost} />
     </div>
-
-    {
-      hasToc && (
-        <aside class="article-fixed-rail">
-          <ArticleToc {headings} variant="desktop" />
-        </aside>
-      )
-    }
   </main>
   <Footer />
 </PostLayout>
@@ -503,10 +491,4 @@ const ogImage = ogImageUrl
     });
   }
   initLightbox();
-</script>
-
-<script>
-  import { setupArticleNavigation } from "@/scripts/articleNavigation";
-
-  setupArticleNavigation();
 </script>

@@ -11,8 +11,6 @@ export default {
     publishedAt: "Published at",
     updatedAt: "Updated",
     backToTop: "Back to top",
-    tableOfContents: "Table of contents",
-    tocLabel: "Article table of contents",
     editPage: "Edit page",
     previousPost: "Previous Post",
     nextPost: "Next Post",
