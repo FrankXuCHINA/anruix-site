@@ -1,43 +1,80 @@
 ---
-import IconChevronUp from "@/assets/icons/IconChevronUp.svg";
+import IconArrowLeft from "@/assets/icons/IconArrowLeft.svg";
+import IconArrowNarrowUp from "@/assets/icons/IconArrowNarrowUp.svg";
 import { useTranslations } from "@/i18n";
 
 const t = useTranslations(Astro.currentLocale);
 ---
 
-<div class="article-back-to-top" data-state="hidden">
+<div
+  id="btt-btn-container"
+  class:list={[
+    "fixed inset-e-4 bottom-8 z-50",
+    "translate-y-14 opacity-0 transition duration-500",
+  ]}
+>
   <button
     type="button"
     data-button="back-to-top"
     aria-label={t.post.backToTop}
     title={t.post.backToTop}
+    class:list={[
+      "group bg-background relative px-2 py-1",
+      "size-14 rounded-full shadow-xl",
+    ]}
   >
-    <IconChevronUp aria-hidden="true" class="size-5" />
+    <span
+      id="progress-indicator"
+      aria-hidden="true"
+      class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent"
+    ></span>
+    <IconArrowLeft aria-hidden="true" class="inline-block rotate-90" />
+    <span class="group-hover:text-accent sr-only text-sm">
+      <IconArrowNarrowUp aria-hidden="true" class="inline-block size-4" />
+      {t.post.backToTop}
+    </span>
   </button>
 </div>
 
 <script is:inline>
   function setupBackToTop() {
-    const container = document.querySelector(".article-back-to-top");
-    const button = container?.querySelector("[data-button='back-to-top']");
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
 
-    if (!container || !button) return;
-    if (button.dataset.bound === "true") return;
-    button.dataset.bound = "true";
+    if (!btnContainer || !backToTopBtn || !progressIndicator) return;
+    if (backToTopBtn.dataset.bound === "true") return;
+    backToTopBtn.dataset.bound = "true";
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      rootElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
     let ticking = false;
 
-    const updateVisibility = () => {
-      container.dataset.state = window.scrollY >= 300 ? "visible" : "hidden";
-    };
+    function update() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent =
+        scrollTotal > 0 ? Math.floor((scrollTop / scrollTotal) * 100) : 0;
 
-    button.addEventListener("click", () => {
-      window.scrollTo({
-        top: 0,
-        behavior: reducedMotion.matches ? "auto" : "smooth",
-      });
-    });
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTotal > 0 && scrollTop / scrollTotal > 0.3;
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
 
     document.addEventListener(
       "scroll",
@@ -45,15 +82,14 @@ const t = useTranslations(Astro.currentLocale);
         if (ticking) return;
         ticking = true;
         window.requestAnimationFrame(() => {
-          updateVisibility();
+          update();
           ticking = false;
         });
       },
       { passive: true }
     );
-    window.addEventListener("pageshow", updateVisibility);
 
-    updateVisibility();
+    update();
   }
 
   setupBackToTop();
