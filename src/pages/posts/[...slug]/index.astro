@@ -155,18 +155,13 @@ const ogImage = ogImageUrl
 
       <EditPost class="sm:hidden" {hideEditPost} {post} />
 
-      <BackToTopButton />
-
       <AdjacentPostNav {prevPost} {nextPost} />
     </div>
 
-    {
-      hasToc && (
-        <aside class="article-fixed-rail">
-          <ArticleToc {headings} variant="desktop" />
-        </aside>
-      )
-    }
+    <aside class="article-fixed-rail">
+      {hasToc && <ArticleToc {headings} variant="desktop" />}
+      <BackToTopButton />
+    </aside>
   </main>
   <Footer />
 </PostLayout>

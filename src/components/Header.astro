@@ -2,9 +2,7 @@
 import { Image } from "astro:assets";
 import { getRelativeLocaleUrl } from "astro:i18n";
 import profileAvatar from "@/assets/images/profile/profile-avatar.png";
-import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
 import IconSearch from "@/assets/icons/IconSearch.svg";
-import IconX from "@/assets/icons/IconX.svg";
 import LinkButton from "./LinkButton.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import { stripBase, stripLocale } from "@/utils/withBase";
@@ -40,7 +38,7 @@ const isActive = (path: string) => {
   {t.a11y.skipToContent}
 </a>
 
-<header class="site-header">
+<header class="site-header" data-menu-state="closed">
   <nav class="site-nav" aria-label="主导航">
     <div class="site-nav-inner flex items-center">
       <a
@@ -105,21 +103,31 @@ const isActive = (path: string) => {
         <button
           id="menu-btn"
           type="button"
-          class="hover:text-accent flex size-9 items-center justify-center border-0 bg-transparent p-0 transition-colors duration-150 sm:hidden"
+          class="menu-toggle hover:text-accent flex size-9 items-center justify-center border-0 bg-transparent p-0 transition-colors duration-150 sm:hidden"
           aria-label={t.a11y.openMenu}
           aria-expanded="false"
           aria-controls="mobile-menu-layer"
           data-label-open={t.a11y.openMenu}
           data-label-close={t.a11y.closeMenu}
+          data-state="closed"
         >
-          <IconMenuDeep id="menu-icon" aria-hidden="true" class="size-5" />
-          <IconX id="close-icon" aria-hidden="true" class="hidden size-5" />
+          <span class="menu-toggle-icon" aria-hidden="true">
+            <span class="menu-toggle-line menu-toggle-line-top"></span>
+            <span class="menu-toggle-line menu-toggle-line-middle"></span>
+            <span class="menu-toggle-line menu-toggle-line-bottom"></span>
+          </span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div id="mobile-menu-layer" class="mobile-menu-layer sm:hidden" hidden>
+  <div
+    id="mobile-menu-layer"
+    class="mobile-menu-layer sm:hidden"
+    data-state="closed"
+    aria-hidden="true"
+    inert
+  >
     <nav class="mobile-menu-panel" aria-label="移动导航">
       <ul id="menu-items" class="mobile-menu-list">
         <li>
@@ -151,26 +159,48 @@ const isActive = (path: string) => {
     const menuLayer = document.querySelector<HTMLElement>("#mobile-menu-layer");
     const menuPanel =
       menuLayer?.querySelector<HTMLElement>(".mobile-menu-panel");
-    const menuIcon = document.querySelector<HTMLElement>("#menu-icon");
-    const closeIcon = document.querySelector<HTMLElement>("#close-icon");
+    const header = menuBtn?.closest<HTMLElement>(".site-header");
 
-    if (!menuBtn || !menuLayer || !menuPanel || !menuIcon || !closeIcon) return;
+    if (!menuBtn || !menuLayer || !menuPanel || !header) return;
     if (menuBtn.dataset.menuBound === "true") return;
     menuBtn.dataset.menuBound = "true";
 
     const openLabel = menuBtn.dataset.labelOpen ?? "打开菜单";
     const closeLabel = menuBtn.dataset.labelClose ?? "关闭菜单";
     const desktopMedia = window.matchMedia("(min-width: 640px)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let closeTimer = 0;
 
     const setMenuOpen = (open: boolean, restoreFocus = false) => {
       const wasOpen = menuBtn.getAttribute("aria-expanded") === "true";
+      window.clearTimeout(closeTimer);
+
       menuBtn.setAttribute("aria-expanded", String(open));
       menuBtn.setAttribute("aria-label", open ? closeLabel : openLabel);
-      menuLayer.hidden = !open;
-      menuIcon.classList.toggle("hidden", open);
-      closeIcon.classList.toggle("hidden", !open);
+      menuBtn.dataset.state = open ? "open" : "closed";
+      menuLayer.dataset.state = open ? "open" : "closed";
+      header.dataset.menuState = open ? "open" : "closed";
 
-      if (wasOpen && !open && restoreFocus) menuBtn.focus();
+      if (
+        !open &&
+        (restoreFocus || menuLayer.contains(document.activeElement))
+      ) {
+        menuBtn.focus({ preventScroll: true });
+      }
+
+      menuLayer.setAttribute("aria-hidden", String(!open));
+
+      if (open) {
+        menuLayer.inert = false;
+      } else {
+        const finishClosing = () => {
+          menuLayer.inert = true;
+        };
+        if (reducedMotion.matches) finishClosing();
+        else closeTimer = window.setTimeout(finishClosing, 220);
+      }
+
+      if (!wasOpen && !open) menuLayer.inert = true;
     };
 
     menuBtn.addEventListener("click", () => {
@@ -190,7 +220,10 @@ const isActive = (path: string) => {
     });
 
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape") {
+      if (
+        event.key === "Escape" &&
+        menuBtn.getAttribute("aria-expanded") === "true"
+      ) {
         setMenuOpen(false, true);
       }
     });
