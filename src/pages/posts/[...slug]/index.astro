@@ -12,7 +12,7 @@ import { getSortedPosts } from "@/utils/getSortedPosts";
 import EditPost from "./_components/EditPost.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
-import ArticleTransitionVisual from "@/components/custom/ArticleTransitionVisual.astro";
+import ArticleTransitionSurface from "@/components/custom/ArticleTransitionSurface.astro";
 import { useTranslations } from "@/i18n";
 import { getPostTransitionKey } from "@/utils/getPostTransitionKey";
 import config from "@/config";
@@ -118,6 +118,7 @@ const ogImage = ogImageUrl
   modDatetime={modDatetime}
 >
   <Header />
+  <ArticleTransitionSurface />
 
   <main
     id="main-content"
@@ -128,9 +129,8 @@ const ogImage = ogImageUrl
     data-article-url={postUrl}
   >
     <div class="article-main">
-      <header class="article-transition-header" data-article-transition-shell>
-        <ArticleTransitionVisual {post} />
-        <h1 class="article-title" data-article-transition-title>{title}</h1>
+      <header>
+        <h1 class="article-title">{title}</h1>
 
         <div class="article-meta">
           <time datetime={publishedDateTime}>{publishedDate}</time>
