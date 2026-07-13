@@ -2,6 +2,7 @@
 @import "./theme.css";
 @import "./typography.css";
 @import "./article-listing.css";
+@import "./article-transition.css";
 @import "rehype-callouts/theme/obsidian";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));

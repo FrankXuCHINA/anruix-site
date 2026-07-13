@@ -3,6 +3,7 @@ import { Font } from "astro:assets";
 import { getRelativeLocaleUrl } from "astro:i18n";
 import { resolveDefaultOgImagePath } from "@/utils/resolveDefaultOgImagePath";
 import { getAssetPath } from "@/utils/withBase";
+import ArticleTransition from "@/components/custom/ArticleTransition.astro";
 import config from "@/config";
 import "@/styles/global.css";
 
@@ -129,6 +130,7 @@ const rssHref = getRelativeLocaleUrl(
         history.scrollRestoration = "auto";
       }
     </script>
+    <ArticleTransition />
   </head>
   <body class="bg-background font-app text-foreground flex min-h-svh flex-col">
     <slot />

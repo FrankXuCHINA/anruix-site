@@ -12,7 +12,9 @@ import { getSortedPosts } from "@/utils/getSortedPosts";
 import EditPost from "./_components/EditPost.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
+import ArticleTransitionVisual from "@/components/custom/ArticleTransitionVisual.astro";
 import { useTranslations } from "@/i18n";
+import { getPostTransitionKey } from "@/utils/getPostTransitionKey";
 import config from "@/config";
 
 export async function getStaticPaths() {
@@ -82,6 +84,9 @@ const publishedDateTime = dayjs(pubDatetime)
   .toISOString();
 const wordCount = countContentWords(post.body ?? "");
 const formattedWordCount = new Intl.NumberFormat("zh-CN").format(wordCount);
+const postSlug = getPostSlug(post.id, post.filePath);
+const postUrl = getPostUrl(post.id, post.filePath, locale);
+const transitionKey = getPostTransitionKey(postSlug);
 
 let ogImageUrl: string | undefined;
 
@@ -114,10 +119,18 @@ const ogImage = ogImageUrl
 >
   <Header />
 
-  <main id="main-content" class="article-page-shell" data-pagefind-body>
+  <main
+    id="main-content"
+    class="article-page-shell"
+    data-pagefind-body
+    data-article-transition-detail
+    data-article-transition-key={transitionKey}
+    data-article-url={postUrl}
+  >
     <div class="article-main">
-      <header>
-        <h1 class="article-title">{title}</h1>
+      <header class="article-transition-header" data-article-transition-shell>
+        <ArticleTransitionVisual {post} />
+        <h1 class="article-title" data-article-transition-title>{title}</h1>
 
         <div class="article-meta">
           <time datetime={publishedDateTime}>{publishedDate}</time>
@@ -133,6 +146,7 @@ const ogImage = ogImageUrl
         data-zoom-image-label={t.post.zoomImage}
         data-image-preview-label={t.post.imagePreview}
         data-close-image-preview-label={t.post.closeImagePreview}
+        data-article-transition-body
         class:list={[
           "mt-10 w-full max-w-full",
           "app-prose",

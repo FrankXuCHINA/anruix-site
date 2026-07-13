@@ -5,7 +5,8 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
 import { countContentWords } from "@/utils/countContentWords";
-import { getPostUrl } from "@/utils/getPostPaths";
+import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
+import { getPostTransitionKey } from "@/utils/getPostTransitionKey";
 import config from "@/config";
 
 type Props = {
@@ -28,6 +29,7 @@ const { id, data, filePath, body = "" } = post;
 const { title, description, pubDatetime, timezone, featured, cover, coverAlt } =
   data;
 const postUrl = getPostUrl(id, filePath, Astro.currentLocale);
+const transitionKey = getPostTransitionKey(getPostSlug(id, filePath));
 const date = dayjs(pubDatetime)
   .tz(timezone ?? config.site.timezone)
   .format("YYYY年M月D日");
@@ -43,8 +45,14 @@ const placeholderText = title.trim().charAt(0) || "安";
   {hidden}
 >
   <article>
-    <a class="post-card" href={postUrl}>
-      <div class="post-card-cover">
+    <a
+      class="post-card"
+      href={postUrl}
+      data-article-transition-card
+      data-article-transition-key={transitionKey}
+      data-article-url={postUrl}
+    >
+      <div class="post-card-cover" data-article-transition-cover>
         {
           typeof cover === "string" ? (
             <img
@@ -82,7 +90,7 @@ const placeholderText = title.trim().charAt(0) || "安";
           <span>{formattedWordCount} 字</span>
         </div>
 
-        <h3 class="post-card-title">{title}</h3>
+        <h3 class="post-card-title" data-article-transition-title>{title}</h3>
         <p class="post-card-description">{description}</p>
       </div>
     </a>
