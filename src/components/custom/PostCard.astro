@@ -52,7 +52,7 @@ const placeholderText = title.trim().charAt(0) || "安";
       data-article-transition-key={transitionKey}
       data-article-url={postUrl}
     >
-      <div class="post-card-cover" data-article-transition-cover>
+      <div class="post-card-cover">
         {
           typeof cover === "string" ? (
             <img
@@ -90,7 +90,7 @@ const placeholderText = title.trim().charAt(0) || "安";
           <span>{formattedWordCount} 字</span>
         </div>
 
-        <h3 class="post-card-title" data-article-transition-title>{title}</h3>
+        <h3 class="post-card-title">{title}</h3>
         <p class="post-card-description">{description}</p>
       </div>
     </a>
