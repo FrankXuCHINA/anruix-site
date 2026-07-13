@@ -1,0 +1,48 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+  post: CollectionEntry<"posts">;
+};
+
+const { post } = Astro.props;
+const { title, cover } = post.data;
+const placeholderText = title.trim().charAt(0) || "安";
+---
+
+<div
+  class="article-transition-cover-target"
+  data-article-transition-cover
+  data-pagefind-ignore
+  aria-hidden="true"
+  hidden
+>
+  {
+    typeof cover === "string" ? (
+      <img
+        src={cover}
+        alt=""
+        width="720"
+        height="480"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    ) : cover ? (
+      <Image
+        src={cover}
+        alt=""
+        width={720}
+        height={480}
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    ) : (
+      <div class="article-transition-placeholder">
+        <span>{placeholderText}</span>
+      </div>
+    )
+  }
+</div>

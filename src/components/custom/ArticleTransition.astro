@@ -1,0 +1,426 @@
+<script is:inline>
+  (() => {
+    if (window.__articleTransitionInitialized) return;
+    window.__articleTransitionInitialized = true;
+
+    const NAVIGATION_CONTEXT_KEY = "anruix:article-transition:navigation";
+    const ORIGINS_KEY = "anruix:article-transition:origins";
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let pendingCard = null;
+    let outgoingCleanup = null;
+
+    const normalizePath = value => {
+      if (!value) return "";
+      try {
+        const path = new URL(value, window.location.origin).pathname;
+        return path === "/" ? path : path.replace(/\/+$/, "");
+      } catch {
+        const path = String(value).split(/[?#]/, 1)[0] || "/";
+        return path === "/" ? path : path.replace(/\/+$/, "");
+      }
+    };
+
+    const readSessionValue = (key, fallback) => {
+      try {
+        const value = sessionStorage.getItem(key);
+        return value ? JSON.parse(value) : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+
+    const writeSessionValue = (key, value) => {
+      try {
+        sessionStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // Storage is an enhancement for browsers without NavigationActivation.
+      }
+    };
+
+    const removeSessionValue = key => {
+      try {
+        sessionStorage.removeItem(key);
+      } catch {
+        // Nothing to clear when storage is unavailable.
+      }
+    };
+
+    const skipTransition = transition => {
+      if (!transition) return;
+      transition.ready.catch(() => {});
+      transition.skipTransition();
+    };
+
+    const isVisible = element =>
+      Boolean(
+        element &&
+        !element.closest("[hidden]") &&
+        element.getClientRects().length
+      );
+
+    const getCardPath = card => normalizePath(card?.dataset.articleUrl);
+
+    const findCard = articlePath => {
+      const cards = Array.from(
+        document.querySelectorAll("[data-article-transition-card]")
+      ).filter(card => getCardPath(card) === articlePath);
+      return cards.find(isVisible) ?? null;
+    };
+
+    const getDetail = () =>
+      document.querySelector("[data-article-transition-detail]");
+
+    const getCardParts = card => ({
+      shell: card,
+      cover: card.querySelector("[data-article-transition-cover]"),
+      title: card.querySelector("[data-article-transition-title]"),
+      body: null,
+    });
+
+    const getDetailParts = detail => {
+      const cover = detail.querySelector("[data-article-transition-cover]");
+      if (cover) cover.hidden = false;
+
+      return {
+        shell: detail.querySelector("[data-article-transition-shell]"),
+        cover,
+        title: detail.querySelector("[data-article-transition-title]"),
+        body: detail.querySelector("[data-article-transition-body]"),
+      };
+    };
+
+    const getNames = key => ({
+      shell: `article-shell-${key}`,
+      cover: `article-cover-${key}`,
+      title: `article-title-${key}`,
+      body: `article-body-${key}`,
+    });
+
+    const setTransitionNames = (parts, names) => {
+      for (const part of ["shell", "cover", "title", "body"]) {
+        if (parts[part]) {
+          parts[part].style.viewTransitionName = names[part];
+        }
+      }
+    };
+
+    const clearTransitionNames = parts => {
+      for (const part of ["shell", "cover", "title", "body"]) {
+        if (parts[part]) parts[part].style.viewTransitionName = "";
+      }
+    };
+
+    const hideTransitionCover = parts => {
+      if (parts.cover?.matches(".article-transition-cover-target")) {
+        parts.cover.hidden = true;
+      }
+    };
+
+    const setIncomingVisibility = (parts, hidden) => {
+      for (const part of ["shell", "body"]) {
+        if (!parts[part]) continue;
+        if (hidden) {
+          parts[part].setAttribute("data-article-transition-hidden", "");
+        } else {
+          parts[part].removeAttribute("data-article-transition-hidden");
+        }
+      }
+    };
+
+    const installRuntimeStyles = (names, direction) => {
+      document.getElementById("article-transition-runtime")?.remove();
+      const style = document.createElement("style");
+      style.id = "article-transition-runtime";
+      style.textContent = `
+        ::view-transition-group(${names.shell}),
+        ::view-transition-group(${names.cover}),
+        ::view-transition-group(${names.title}) {
+          animation-duration: 320ms;
+          animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        ::view-transition-old(${names.shell}),
+        ::view-transition-new(${names.shell}),
+        ::view-transition-old(${names.cover}),
+        ::view-transition-new(${names.cover}),
+        ::view-transition-old(${names.title}),
+        ::view-transition-new(${names.title}) {
+          mix-blend-mode: normal;
+        }
+
+        ::view-transition-old(${names.cover}),
+        ::view-transition-new(${names.cover}) {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          overflow: clip;
+        }
+
+        ::view-transition-old(${names.title}),
+        ::view-transition-new(${names.title}) {
+          backface-visibility: hidden;
+          transform-origin: left center;
+        }
+
+        html[data-article-transition="${direction}"]
+          ::view-transition-image-pair(${names.shell}) {
+          overflow: clip;
+          animation: article-transition-shell-${direction} 320ms
+            cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        html[data-article-transition="${direction}"]
+          ::view-transition-image-pair(${names.cover}) {
+          overflow: clip;
+          animation: article-transition-cover-${direction} 320ms
+            cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        html[data-article-transition="open"]
+          ::view-transition-new(${names.body}) {
+          animation: article-transition-content-in 220ms
+            cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+          mix-blend-mode: normal;
+        }
+
+        html[data-article-transition="close"]
+          ::view-transition-old(${names.body}) {
+          animation: article-transition-content-out 160ms ease-out both;
+          mix-blend-mode: normal;
+        }
+      `;
+      document.head.append(style);
+      return style;
+    };
+
+    const rememberOrigin = info => {
+      const origins = readSessionValue(ORIGINS_KEY, {});
+      origins[info.articlePath] = {
+        key: info.key,
+        listPath: info.listPath,
+      };
+      writeSessionValue(ORIGINS_KEY, origins);
+    };
+
+    const getRememberedOrigin = articlePath => {
+      const origins = readSessionValue(ORIGINS_KEY, {});
+      return origins[articlePath] ?? null;
+    };
+
+    const getSwapDestination = event =>
+      normalizePath(event.activation?.entry?.url);
+
+    const getSwapInfo = event => {
+      const fromPath = normalizePath(window.location.href);
+      const toPath = getSwapDestination(event);
+      if (!toPath) return null;
+
+      const detail = getDetail();
+      if (!detail) {
+        const card =
+          pendingCard &&
+          getCardPath(pendingCard) === toPath &&
+          isVisible(pendingCard)
+            ? pendingCard
+            : findCard(toPath);
+        if (!card) return null;
+
+        return {
+          direction: "open",
+          key: card.dataset.articleTransitionKey,
+          articlePath: toPath,
+          listPath: fromPath,
+          fromPath,
+          toPath,
+          parts: getCardParts(card),
+        };
+      }
+
+      const articlePath = normalizePath(detail.dataset.articleUrl);
+      const origin = getRememberedOrigin(articlePath);
+      if (
+        !origin ||
+        origin.key !== detail.dataset.articleTransitionKey ||
+        origin.listPath !== toPath
+      ) {
+        return null;
+      }
+
+      return {
+        direction: "close",
+        key: detail.dataset.articleTransitionKey,
+        articlePath,
+        listPath: toPath,
+        fromPath,
+        toPath,
+        parts: getDetailParts(detail),
+      };
+    };
+
+    const getNavigationFromPath = () =>
+      normalizePath(window.navigation?.activation?.from?.url);
+
+    const getRevealInfo = () => {
+      const currentPath = normalizePath(window.location.href);
+      const fromPath = getNavigationFromPath();
+      const stored = readSessionValue(NAVIGATION_CONTEXT_KEY, null);
+      removeSessionValue(NAVIGATION_CONTEXT_KEY);
+
+      let context = stored && stored.toPath === currentPath ? stored : null;
+
+      const detail = getDetail();
+      if (detail) {
+        const articlePath = normalizePath(detail.dataset.articleUrl);
+        const origin = getRememberedOrigin(articlePath);
+        if (
+          !context &&
+          fromPath &&
+          origin?.key === detail.dataset.articleTransitionKey &&
+          origin.listPath === fromPath
+        ) {
+          context = {
+            direction: "open",
+            key: detail.dataset.articleTransitionKey,
+            articlePath,
+            listPath: fromPath,
+            fromPath,
+            toPath: currentPath,
+          };
+        }
+        if (
+          !context ||
+          context.direction !== "open" ||
+          context.articlePath !== articlePath ||
+          context.key !== detail.dataset.articleTransitionKey
+        ) {
+          return null;
+        }
+        return { ...context, parts: getDetailParts(detail) };
+      }
+
+      const articlePath = context?.articlePath || fromPath;
+      const card = articlePath ? findCard(articlePath) : null;
+      const origin = articlePath ? getRememberedOrigin(articlePath) : null;
+      if (
+        !context &&
+        card &&
+        fromPath &&
+        origin?.key === card.dataset.articleTransitionKey &&
+        origin.listPath === currentPath
+      ) {
+        context = {
+          direction: "close",
+          key: card.dataset.articleTransitionKey,
+          articlePath: fromPath,
+          listPath: currentPath,
+          fromPath,
+          toPath: currentPath,
+        };
+      }
+      if (
+        !context ||
+        context.direction !== "close" ||
+        context.listPath !== currentPath ||
+        !card ||
+        context.key !== card.dataset.articleTransitionKey
+      ) {
+        return null;
+      }
+      return { ...context, parts: getCardParts(card) };
+    };
+
+    const prepareTransition = info => {
+      const names = getNames(info.key);
+      document.documentElement.dataset.articleTransition = info.direction;
+      setTransitionNames(info.parts, names);
+      const runtimeStyles = installRuntimeStyles(names, info.direction);
+
+      return () => {
+        clearTransitionNames(info.parts);
+        hideTransitionCover(info.parts);
+        setIncomingVisibility(info.parts, false);
+        runtimeStyles.remove();
+        delete document.documentElement.dataset.articleTransition;
+      };
+    };
+
+    document.addEventListener(
+      "click",
+      event => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        pendingCard = event.target.closest?.("[data-article-transition-card]");
+      },
+      true
+    );
+
+    window.addEventListener("pageswap", event => {
+      outgoingCleanup?.();
+      outgoingCleanup = null;
+      pendingCard =
+        pendingCard && document.contains(pendingCard) ? pendingCard : null;
+
+      if (!event.viewTransition || reduceMotion.matches) {
+        skipTransition(event.viewTransition);
+        removeSessionValue(NAVIGATION_CONTEXT_KEY);
+        pendingCard = null;
+        return;
+      }
+
+      // The outgoing document is hidden before `ready` can settle normally.
+      event.viewTransition.ready.catch(() => {});
+
+      const info = getSwapInfo(event);
+      pendingCard = null;
+      if (!info?.key) {
+        skipTransition(event.viewTransition);
+        removeSessionValue(NAVIGATION_CONTEXT_KEY);
+        return;
+      }
+
+      if (info.direction === "open") rememberOrigin(info);
+      writeSessionValue(NAVIGATION_CONTEXT_KEY, {
+        direction: info.direction,
+        key: info.key,
+        articlePath: info.articlePath,
+        listPath: info.listPath,
+        fromPath: info.fromPath,
+        toPath: info.toPath,
+      });
+
+      const cleanup = prepareTransition(info);
+      outgoingCleanup = cleanup;
+      event.viewTransition.finished.then(cleanup, cleanup);
+    });
+
+    window.addEventListener("pagereveal", event => {
+      if (!event.viewTransition || reduceMotion.matches) {
+        skipTransition(event.viewTransition);
+        removeSessionValue(NAVIGATION_CONTEXT_KEY);
+        return;
+      }
+
+      const info = getRevealInfo();
+      if (!info?.key) {
+        skipTransition(event.viewTransition);
+        return;
+      }
+
+      const cleanup = prepareTransition(info);
+      event.viewTransition.ready.then(() => {
+        clearTransitionNames(info.parts);
+        hideTransitionCover(info.parts);
+        setIncomingVisibility(info.parts, true);
+      }, cleanup);
+      event.viewTransition.finished.then(cleanup, cleanup);
+    });
+  })();
+</script>
