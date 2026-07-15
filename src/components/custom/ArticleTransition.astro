@@ -68,18 +68,32 @@
       return cards.find(isVisible) ?? (allowHidden ? cards[0] : null) ?? null;
     };
 
-    const getSearchQuery = card =>
-      card
-        ?.closest("[data-post-search]")
-        ?.querySelector("input[type='search']")
-        ?.value.trim() ?? "";
+    const getSearchState = card => {
+      const root = card?.closest("[data-post-search]");
+      const query =
+        root?.querySelector("input[type='search']")?.value.trim() ?? "";
+      if (!root || !query) {
+        return { query: "", resultPaths: [], statusText: "" };
+      }
+
+      const resultPaths = Array.from(root.querySelectorAll("[data-post-card]"))
+        .filter(item => !item.hidden)
+        .map(item => normalizePath(item.dataset.searchUrl))
+        .filter(Boolean);
+
+      return {
+        query,
+        resultPaths,
+        statusText:
+          root.querySelector("[data-search-status]")?.textContent?.trim() ?? "",
+      };
+    };
 
     const getDetail = () =>
       document.querySelector("[data-article-transition-detail]");
 
     const getNames = key => ({
       card: `article-card-${key}`,
-      listPage: `article-list-page-${key}`,
       detailPage: `article-detail-page-${key}`,
       cover: `article-cover-${key}`,
       title: `article-title-${key}`,
@@ -111,6 +125,8 @@
         key: info.key,
         listPath: info.listPath,
         searchQuery: info.searchQuery,
+        searchResultPaths: info.searchResultPaths,
+        searchStatusText: info.searchStatusText,
       };
       writeSessionValue(ORIGINS_KEY, origins);
     };
@@ -120,26 +136,45 @@
       return origins[articlePath] ?? null;
     };
 
-    const restoreSearchResult = (card, query) => {
-      if (!query || isVisible(card)) return;
+    const restoreSearchResult = (
+      card,
+      query,
+      resultPaths = [],
+      statusText = ""
+    ) => {
+      if (!query) return;
 
       const root = card.closest("[data-post-search]");
-      const item = card.closest("[data-post-card]");
       const input = root?.querySelector("input[type='search']");
       const results = root?.querySelector("[data-search-results]");
-      if (!root || !item || !input || !results) return;
+      const list = root?.querySelector("[data-search-list]");
+      const status = root?.querySelector("[data-search-status]");
+      if (!root || !input || !results || !list || !status) return;
+
+      const items = Array.from(root.querySelectorAll("[data-post-card]"));
+      const itemsByPath = new Map(
+        items.map(item => [normalizePath(item.dataset.searchUrl), item])
+      );
+      const fallbackPath = getCardPath(card);
+      const orderedPaths = resultPaths.length
+        ? resultPaths
+        : fallbackPath
+          ? [fallbackPath]
+          : [];
+      const orderedItems = orderedPaths
+        .map(path => itemsByPath.get(path))
+        .filter(Boolean);
+      const visibleItems = new Set(orderedItems);
 
       input.value = query;
       results.hidden = false;
-      item.hidden = false;
+      items.forEach(item => (item.hidden = !visibleItems.has(item)));
+      orderedItems.forEach(item => list.append(item));
+      status.textContent = statusText;
       root.querySelector("[data-search-clear]")?.removeAttribute("hidden");
       document
         .querySelectorAll("[data-search-default]")
         .forEach(element => (element.hidden = true));
-
-      window.setTimeout(() => {
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      }, 0);
     };
 
     const installRuntimeStyles = (names, direction) => {
@@ -147,27 +182,20 @@
       const style = document.createElement("style");
       style.id = "article-transition-runtime";
       style.textContent = `
-        ::view-transition-group(${names.listPage}),
         ::view-transition-group(${names.detailPage}) {
           z-index: 0;
           animation: none;
         }
 
-        ::view-transition-image-pair(${names.listPage}),
         ::view-transition-image-pair(${names.detailPage}) {
           isolation: isolate;
         }
 
-        ::view-transition-new(${names.listPage}),
         ::view-transition-new(${names.detailPage}) {
           width: 100%;
           height: 100%;
           mix-blend-mode: normal;
           backface-visibility: hidden;
-        }
-
-        ::view-transition-new(${names.listPage}),
-        ::view-transition-new(${names.detailPage}) {
           animation: article-transition-page-in 220ms
             cubic-bezier(0.22, 1, 0.36, 1) 110ms both;
         }
@@ -284,7 +312,7 @@
         ::view-transition-new(${names.detailMeta}) {
           animation: article-transition-meta-in 130ms
             cubic-bezier(0.22, 1, 0.36, 1)
-            ${direction === "open" ? "170ms" : "210ms"} both;
+            ${direction === "open" ? "170ms" : "180ms"} both;
         }
       `;
       document.head.append(style);
@@ -293,7 +321,12 @@
 
     const prepareTransition = info => {
       if (info.side === "list" && info.direction === "close") {
-        restoreSearchResult(info.card, info.searchQuery);
+        restoreSearchResult(
+          info.card,
+          info.searchQuery,
+          info.searchResultPaths,
+          info.searchStatusText
+        );
       }
       const element = info.side === "detail" ? info.detail : info.card;
       if (!element) return null;
@@ -302,20 +335,17 @@
       const sharedText = getSharedText(element);
       const root = document.documentElement;
       const page = document.querySelector("main");
-      // Keep unrelated outgoing content out of the transition overlay. The
-      // shared text and clicked card carry continuity while only the incoming
-      // page is allowed to fade in.
-      const isIncomingPage =
-        (info.direction === "open" && info.side === "detail") ||
-        (info.direction === "close" && info.side === "list");
+      // Only the opening detail page gets a page-level fade. On return, the
+      // browser may finish native scroll restoration after the destination
+      // snapshot is captured. Keeping the live list out of the overlay avoids
+      // replacing a stale-position snapshot on the final frame.
+      const isIncomingDetail =
+        info.direction === "open" && info.side === "detail";
       const previousRootName = root.style.viewTransitionName;
       root.dataset.articleTransition = info.direction;
       root.style.viewTransitionName = "none";
       const sharedElements = [
-        [
-          isIncomingPage ? page : null,
-          info.side === "list" ? names.listPage : names.detailPage,
-        ],
+        [isIncomingDetail ? page : null, names.detailPage],
         [
           info.side === "list"
             ? element.querySelector("[data-article-transition-shell]")
@@ -368,6 +398,8 @@
             : findCard(toPath);
         if (!card) return null;
 
+        const searchState = getSearchState(card);
+
         return {
           direction: "open",
           side: "list",
@@ -376,7 +408,9 @@
           listPath: fromPath,
           fromPath,
           toPath,
-          searchQuery: getSearchQuery(card),
+          searchQuery: searchState.query,
+          searchResultPaths: searchState.resultPaths,
+          searchStatusText: searchState.statusText,
           card,
         };
       }
@@ -400,6 +434,8 @@
         fromPath,
         toPath,
         searchQuery: origin.searchQuery ?? "",
+        searchResultPaths: origin.searchResultPaths ?? [],
+        searchStatusText: origin.searchStatusText ?? "",
         detail,
       };
     };
@@ -432,6 +468,8 @@
             fromPath,
             toPath: currentPath,
             searchQuery: origin.searchQuery ?? "",
+            searchResultPaths: origin.searchResultPaths ?? [],
+            searchStatusText: origin.searchStatusText ?? "",
           };
         }
         if (
@@ -448,6 +486,10 @@
       const articlePath = context?.articlePath || fromPath;
       const origin = articlePath ? getRememberedOrigin(articlePath) : null;
       const searchQuery = context?.searchQuery ?? origin?.searchQuery ?? "";
+      const searchResultPaths =
+        context?.searchResultPaths ?? origin?.searchResultPaths ?? [];
+      const searchStatusText =
+        context?.searchStatusText ?? origin?.searchStatusText ?? "";
       const card = articlePath
         ? findCard(articlePath, Boolean(searchQuery))
         : null;
@@ -466,6 +508,8 @@
           fromPath,
           toPath: currentPath,
           searchQuery,
+          searchResultPaths,
+          searchStatusText,
         };
       }
       if (
@@ -477,7 +521,14 @@
       ) {
         return null;
       }
-      return { ...context, searchQuery, side: "list", card };
+      return {
+        ...context,
+        searchQuery,
+        searchResultPaths,
+        searchStatusText,
+        side: "list",
+        card,
+      };
     };
 
     document.addEventListener(
@@ -531,6 +582,8 @@
         fromPath: info.fromPath,
         toPath: info.toPath,
         searchQuery: info.searchQuery,
+        searchResultPaths: info.searchResultPaths,
+        searchStatusText: info.searchStatusText,
       });
 
       const cleanup = prepareTransition(info);
