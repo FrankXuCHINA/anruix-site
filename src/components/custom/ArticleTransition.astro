@@ -181,6 +181,14 @@
       document.getElementById("article-transition-runtime")?.remove();
       const style = document.createElement("style");
       style.id = "article-transition-runtime";
+      const isClosing = direction === "close";
+      const textMoveDuration = isClosing ? "280ms" : "340ms";
+      const oldTextAnimation = isClosing
+        ? "article-transition-text-close-old 280ms linear both"
+        : "article-transition-text-open-old 340ms linear both";
+      const newTextAnimation = isClosing
+        ? "article-transition-text-close-new 60ms cubic-bezier(0.22, 1, 0.36, 1) 280ms both"
+        : "article-transition-text-open-new 340ms linear both";
       style.textContent = `
         ::view-transition-group(${names.detailPage}) {
           z-index: 0;
@@ -244,8 +252,9 @@
         ::view-transition-group(${names.title}),
         ::view-transition-group(${names.excerpt}) {
           z-index: 4;
-          animation-duration: 340ms;
+          animation-duration: ${textMoveDuration};
           animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          animation-fill-mode: both;
         }
 
         ::view-transition-group(${names.excerpt}) {
@@ -272,19 +281,19 @@
         }
 
         ::view-transition-old(${names.title}) {
-          animation: article-transition-text-${direction}-old 340ms linear both;
+          animation: ${oldTextAnimation};
         }
 
         ::view-transition-new(${names.title}) {
-          animation: article-transition-text-${direction}-new 340ms linear both;
+          animation: ${newTextAnimation};
         }
 
         ::view-transition-old(${names.excerpt}) {
-          animation: article-transition-text-${direction}-old 340ms linear both;
+          animation: ${oldTextAnimation};
         }
 
         ::view-transition-new(${names.excerpt}) {
-          animation: article-transition-text-${direction}-new 340ms linear both;
+          animation: ${newTextAnimation};
         }
 
         ::view-transition-group(${names.listMeta}),
