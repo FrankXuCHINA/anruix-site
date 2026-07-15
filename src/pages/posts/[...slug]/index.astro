@@ -12,7 +12,6 @@ import { getSortedPosts } from "@/utils/getSortedPosts";
 import EditPost from "./_components/EditPost.astro";
 import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
-import ArticleTransitionSurface from "@/components/custom/ArticleTransitionSurface.astro";
 import { useTranslations } from "@/i18n";
 import { getPostTransitionKey } from "@/utils/getPostTransitionKey";
 import config from "@/config";
@@ -118,7 +117,6 @@ const ogImage = ogImageUrl
   modDatetime={modDatetime}
 >
   <Header />
-  <ArticleTransitionSurface />
 
   <main
     id="main-content"
