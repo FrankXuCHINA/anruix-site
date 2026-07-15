@@ -80,7 +80,27 @@
     const getSurface = () =>
       document.querySelector("[data-article-transition-surface]");
 
-    const getName = key => `article-surface-${key}`;
+    const getNames = key => ({
+      surface: `article-surface-${key}`,
+      title: `article-title-${key}`,
+      excerpt: `article-excerpt-${key}`,
+    });
+
+    const getIntro = root => {
+      const body = root?.querySelector("[data-article-transition-body]");
+      return (
+        Array.from(body?.children ?? []).find(element =>
+          element.matches("p")
+        ) ?? null
+      );
+    };
+
+    const getSharedText = root => ({
+      title: root?.querySelector("[data-article-transition-title]") ?? null,
+      excerpt:
+        root?.querySelector("[data-article-transition-excerpt]") ??
+        getIntro(root),
+    });
 
     const rememberOrigin = info => {
       const origins = readSessionValue(ORIGINS_KEY, {});
@@ -111,13 +131,14 @@
       if (!query || isVisible(card)) return;
 
       const root = card.closest("[data-post-search]");
+      const item = card.closest("[data-post-card]");
       const input = root?.querySelector("input[type='search']");
       const results = root?.querySelector("[data-search-results]");
-      if (!root || !input || !results) return;
+      if (!root || !item || !input || !results) return;
 
       input.value = query;
       results.hidden = false;
-      card.hidden = false;
+      item.hidden = false;
       root.querySelector("[data-search-clear]")?.removeAttribute("hidden");
       document
         .querySelectorAll("[data-search-default]")
@@ -158,44 +179,157 @@
         detailRect.top - surfaceRect.top
       )}px)`;
 
-      return surface;
+      return {
+        surface,
+        ...getSharedText(clone),
+      };
     };
 
-    const installRuntimeStyles = (name, direction) => {
+    const createTextCapture = element => {
+      if (!element) return null;
+
+      const rect = element.getBoundingClientRect();
+      if (!rect.width || !rect.height) return null;
+
+      const computed = getComputedStyle(element);
+      const clone = element.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.removeAttribute("data-article-transition-title");
+      clone.removeAttribute("data-article-transition-excerpt");
+      clone.setAttribute("aria-hidden", "true");
+      clone
+        .querySelectorAll("[id]")
+        .forEach(node => node.removeAttribute("id"));
+
+      Object.assign(clone.style, {
+        position: "fixed",
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        zIndex: "41",
+        display: "block",
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        minWidth: "0",
+        maxWidth: "none",
+        margin: "0",
+        padding: "0",
+        overflow: "hidden",
+        color: computed.color,
+        background: "transparent",
+        border: "0",
+        boxSizing: "border-box",
+        fontFamily: computed.fontFamily,
+        fontSize: computed.fontSize,
+        fontStyle: computed.fontStyle,
+        fontWeight: computed.fontWeight,
+        fontStretch: computed.fontStretch,
+        fontVariant: computed.fontVariant,
+        lineHeight: computed.lineHeight,
+        letterSpacing: computed.letterSpacing,
+        textAlign: computed.textAlign,
+        textDecoration: computed.textDecoration,
+        textTransform: computed.textTransform,
+        whiteSpace: computed.whiteSpace,
+        wordBreak: computed.wordBreak,
+        overflowWrap: computed.overflowWrap,
+        pointerEvents: "none",
+        transform: "none",
+      });
+
+      const previousVisibility = element.style.visibility;
+      document.body.append(clone);
+      element.style.visibility = "hidden";
+
+      return {
+        element: clone,
+        cleanup: () => {
+          element.style.visibility = previousVisibility;
+          clone.remove();
+        },
+      };
+    };
+
+    const installRuntimeStyles = (names, direction) => {
       document.getElementById("article-transition-runtime")?.remove();
       const style = document.createElement("style");
       style.id = "article-transition-runtime";
       style.textContent = `
-        ::view-transition-group(${name}) {
+        ::view-transition-group(${names.surface}) {
           z-index: 2;
-          animation-duration: 320ms;
+          animation-duration: 340ms;
           animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        ::view-transition-image-pair(${name}) {
+        ::view-transition-image-pair(${names.surface}) {
           overflow: clip;
           background: var(--background);
           box-shadow: 0 12px 36px rgb(0 0 0 / 0.14);
-          animation: article-transition-radius-${direction} 320ms
+          animation: article-transition-radius-${direction} 340ms
             cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        ::view-transition-old(${name}),
-        ::view-transition-new(${name}) {
+        ::view-transition-old(${names.surface}),
+        ::view-transition-new(${names.surface}) {
           width: 100%;
           height: 100%;
           mix-blend-mode: normal;
           backface-visibility: hidden;
         }
 
-        ::view-transition-old(${name}) {
-          animation: article-transition-snapshot-out 320ms
+        ::view-transition-old(${names.surface}) {
+          animation: article-transition-snapshot-out 340ms
             cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
-        ::view-transition-new(${name}) {
-          animation: article-transition-snapshot-in 320ms
+        ::view-transition-new(${names.surface}) {
+          animation: article-transition-snapshot-in 340ms
             cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        ::view-transition-group(${names.title}),
+        ::view-transition-group(${names.excerpt}) {
+          z-index: 4;
+          animation-duration: 340ms;
+          animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        ::view-transition-group(${names.excerpt}) {
+          z-index: 3;
+        }
+
+        ::view-transition-image-pair(${names.title}),
+        ::view-transition-image-pair(${names.excerpt}) {
+          overflow: visible;
+          isolation: isolate;
+        }
+
+        ::view-transition-old(${names.title}),
+        ::view-transition-new(${names.title}),
+        ::view-transition-old(${names.excerpt}),
+        ::view-transition-new(${names.excerpt}) {
+          width: 100%;
+          height: 100%;
+          mix-blend-mode: normal;
+          backface-visibility: hidden;
+          object-fit: contain;
+          object-position: left top;
+          transform-origin: left top;
+        }
+
+        ::view-transition-old(${names.title}) {
+          animation: article-transition-title-out 340ms linear both;
+        }
+
+        ::view-transition-new(${names.title}) {
+          animation: article-transition-title-in 340ms linear both;
+        }
+
+        ::view-transition-old(${names.excerpt}) {
+          animation: article-transition-excerpt-out 340ms linear both;
+        }
+
+        ::view-transition-new(${names.excerpt}) {
+          animation: article-transition-excerpt-in 340ms linear both;
         }
       `;
       document.head.append(style);
@@ -206,20 +340,36 @@
       if (info.side === "list" && info.direction === "close") {
         restoreSearchResult(info.card, info.searchQuery);
       }
-      const element =
+      const prepared =
         info.side === "detail"
           ? populateSurface(info.detail, info.direction)
-          : info.card;
-      if (!element) return null;
+          : {
+              surface: info.card,
+              ...getSharedText(info.card),
+            };
+      if (!prepared?.surface) return null;
 
-      const name = getName(info.key);
+      const names = getNames(info.key);
+      const titleCapture = createTextCapture(prepared.title);
+      const excerptCapture = createTextCapture(prepared.excerpt);
       document.documentElement.dataset.articleTransition = info.direction;
-      element.style.viewTransitionName = name;
-      const runtimeStyles = installRuntimeStyles(name, info.direction);
+      const sharedElements = [
+        [prepared.surface, names.surface],
+        [titleCapture?.element, names.title],
+        [excerptCapture?.element, names.excerpt],
+      ].filter(([element]) => element);
+      sharedElements.forEach(
+        ([element, name]) => (element.style.viewTransitionName = name)
+      );
+      const runtimeStyles = installRuntimeStyles(names, info.direction);
 
       return () => {
-        element.style.viewTransitionName = "";
-        if (info.side === "detail") clearSurface(element);
+        sharedElements.forEach(
+          ([element]) => (element.style.viewTransitionName = "")
+        );
+        titleCapture?.cleanup();
+        excerptCapture?.cleanup();
+        if (info.side === "detail") clearSurface(prepared.surface);
         runtimeStyles.remove();
         delete document.documentElement.dataset.articleTransition;
       };
