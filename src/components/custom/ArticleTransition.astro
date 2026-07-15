@@ -218,19 +218,12 @@
           isolation: isolate;
         }
 
-        ::view-transition-old(${names.listPage}),
-        ::view-transition-old(${names.detailPage}),
         ::view-transition-new(${names.listPage}),
         ::view-transition-new(${names.detailPage}) {
           width: 100%;
           height: 100%;
           mix-blend-mode: normal;
           backface-visibility: hidden;
-        }
-
-        ::view-transition-old(${names.listPage}),
-        ::view-transition-old(${names.detailPage}) {
-          animation: article-transition-page-out 90ms ease-out both;
         }
 
         ::view-transition-new(${names.listPage}),
@@ -333,11 +326,20 @@
       const excerptCapture = createTextCapture(sharedText.excerpt);
       const root = document.documentElement;
       const page = document.querySelector("main");
+      // Keep unrelated outgoing content out of the transition overlay. The
+      // shared text and clicked card carry continuity while only the incoming
+      // page is allowed to fade in.
+      const isIncomingPage =
+        (info.direction === "open" && info.side === "detail") ||
+        (info.direction === "close" && info.side === "list");
       const previousRootName = root.style.viewTransitionName;
       root.dataset.articleTransition = info.direction;
       root.style.viewTransitionName = "none";
       const sharedElements = [
-        [page, info.side === "list" ? names.listPage : names.detailPage],
+        [
+          isIncomingPage ? page : null,
+          info.side === "list" ? names.listPage : names.detailPage,
+        ],
         [info.side === "list" ? info.card : null, names.card],
         [titleCapture?.element, names.title],
         [excerptCapture?.element, names.excerpt],

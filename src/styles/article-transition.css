@@ -8,15 +8,6 @@
   mix-blend-mode: normal;
 }
 
-@keyframes article-transition-page-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
 @keyframes article-transition-page-in {
   from {
     opacity: 0;
