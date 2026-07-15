@@ -57,43 +57,68 @@
   }
 }
 
-@keyframes article-transition-text-open-old {
+@keyframes article-transition-text-old {
   0%,
-  12% {
+  38% {
     opacity: 1;
   }
-  22%,
+  64%,
   100% {
     opacity: 0;
   }
 }
 
-@keyframes article-transition-text-open-new {
+@keyframes article-transition-text-new {
   0%,
-  22% {
+  30% {
     opacity: 0;
   }
-  34%,
+  56%,
   100% {
     opacity: 1;
   }
 }
 
-@keyframes article-transition-text-close-old {
+@keyframes article-transition-token-old {
   0%,
-  82% {
+  38% {
     opacity: 1;
   }
+  64%,
   100% {
     opacity: 0;
   }
 }
 
-@keyframes article-transition-text-close-new {
-  from {
+@keyframes article-transition-token-new {
+  0%,
+  30% {
     opacity: 0;
   }
-  to {
+  56%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes article-transition-excerpt-token-old {
+  0%,
+  4% {
+    opacity: 1;
+  }
+  18%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes article-transition-excerpt-token-new {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  58%,
+  100% {
     opacity: 1;
   }
 }
