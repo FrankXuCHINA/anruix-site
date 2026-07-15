@@ -81,22 +81,19 @@
 
 @keyframes article-transition-text-close-old {
   0%,
-  88% {
+  82% {
     opacity: 1;
   }
-  96%,
   100% {
     opacity: 0;
   }
 }
 
 @keyframes article-transition-text-close-new {
-  0%,
-  88% {
+  from {
     opacity: 0;
   }
-  96%,
-  100% {
+  to {
     opacity: 1;
   }
 }
