@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
 import { countContentWords } from "@/utils/countContentWords";
+import { getPostExcerpt } from "@/utils/getPostExcerpt";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
 import { getPostTransitionKey } from "@/utils/getPostTransitionKey";
 import config from "@/config";
@@ -35,6 +36,7 @@ const date = dayjs(pubDatetime)
   .format("YYYY年M月D日");
 const wordCount = countContentWords(body);
 const formattedWordCount = new Intl.NumberFormat("zh-CN").format(wordCount);
+const excerpt = getPostExcerpt(body, description);
 const placeholderText = title.trim().charAt(0) || "安";
 ---
 
@@ -52,7 +54,12 @@ const placeholderText = title.trim().charAt(0) || "安";
       data-article-transition-key={transitionKey}
       data-article-url={postUrl}
     >
-      <div class="post-card-cover">
+      <span
+        class="post-card-transition-shell"
+        data-article-transition-shell
+        aria-hidden="true"></span>
+
+      <div class="post-card-cover" data-article-transition-cover>
         {
           typeof cover === "string" ? (
             <img
@@ -83,7 +90,7 @@ const placeholderText = title.trim().charAt(0) || "安";
       </div>
 
       <div class="post-card-content">
-        <div class="post-card-meta">
+        <div class="post-card-meta" data-article-transition-meta>
           {featured && <span class="post-card-pinned">置顶</span>}
           <span>{date}</span>
           <span aria-hidden="true">·</span>
@@ -94,7 +101,7 @@ const placeholderText = title.trim().charAt(0) || "安";
           {title}
         </h3>
         <p class="post-card-description" data-article-transition-excerpt>
-          {description}
+          {excerpt}
         </p>
       </div>
     </a>
@@ -108,17 +115,28 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   .post-card {
+    position: relative;
     display: flex;
     min-width: 0;
     flex-direction: column;
     gap: var(--article-card-gap);
     padding: var(--article-card-padding);
     color: var(--foreground);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 1.25rem;
+    text-decoration: none;
+  }
+
+  .post-card-transition-shell {
+    position: absolute;
+    inset: -1px;
+    z-index: 0;
+    pointer-events: none;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 1.25rem;
+    border-radius: inherit;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.035);
-    text-decoration: none;
     transition:
       background-color 180ms ease,
       border-color 180ms ease,
@@ -127,6 +145,9 @@ const placeholderText = title.trim().charAt(0) || "安";
 
   .post-card:hover {
     color: var(--foreground);
+  }
+
+  .post-card:hover .post-card-transition-shell {
     border-color: color-mix(in srgb, var(--border) 78%, var(--foreground) 22%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   }
@@ -137,6 +158,8 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   .post-card-cover {
+    position: relative;
+    z-index: 1;
     width: 100%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
@@ -168,6 +191,8 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   .post-card-content {
+    position: relative;
+    z-index: 1;
     display: flex;
     min-width: 0;
     flex-direction: column;
@@ -244,12 +269,12 @@ const placeholderText = title.trim().charAt(0) || "安";
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .post-card {
+    .post-card-transition-shell {
       transition: none;
     }
   }
 
-  :global([data-theme="dark"]) .post-card:hover {
+  :global([data-theme="dark"]) .post-card:hover .post-card-transition-shell {
     border-color: color-mix(in srgb, var(--border) 76%, var(--foreground) 24%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   }
