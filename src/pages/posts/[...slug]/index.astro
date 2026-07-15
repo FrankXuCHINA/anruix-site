@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import dayjsTimezone from "dayjs/plugin/timezone";
 import { countContentWords } from "@/utils/countContentWords";
+import { getPostExcerpt } from "@/utils/getPostExcerpt";
 import { getPostSlug, getPostUrl } from "@/utils/getPostPaths";
 import { getSortedPosts } from "@/utils/getSortedPosts";
 import EditPost from "./_components/EditPost.astro";
@@ -83,6 +84,7 @@ const publishedDateTime = dayjs(pubDatetime)
   .toISOString();
 const wordCount = countContentWords(post.body ?? "");
 const formattedWordCount = new Intl.NumberFormat("zh-CN").format(wordCount);
+const excerpt = getPostExcerpt(post.body ?? "", description);
 const postSlug = getPostSlug(post.id, post.filePath);
 const postUrl = getPostUrl(post.id, post.filePath, locale);
 const transitionKey = getPostTransitionKey(postSlug);
@@ -125,6 +127,8 @@ const ogImage = ogImageUrl
     data-article-transition-detail
     data-article-transition-key={transitionKey}
     data-article-url={postUrl}
+    data-article-transition-title-text={title}
+    data-article-transition-excerpt-text={excerpt}
   >
     <div class="article-main">
       <header>

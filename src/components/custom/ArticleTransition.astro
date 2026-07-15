@@ -6,6 +6,14 @@
     const NAVIGATION_CONTEXT_KEY = "anruix:article-transition:navigation";
     const ORIGINS_KEY = "anruix:article-transition:origins";
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const MAX_TITLE_TOKENS = 96;
+    const MAX_EXCERPT_TOKENS = 160;
+    const graphemeSegmenter =
+      typeof Intl.Segmenter === "function"
+        ? new Intl.Segmenter(document.documentElement.lang || "zh-CN", {
+            granularity: "grapheme",
+          })
+        : null;
     let pendingCard = null;
     let outgoingCleanup = null;
 
@@ -119,6 +127,190 @@
         getIntro(root),
     });
 
+    const normalizeSharedText = value =>
+      String(value ?? "")
+        .replace(/\s+/gu, " ")
+        .trim();
+
+    const splitGraphemes = value =>
+      graphemeSegmenter
+        ? Array.from(graphemeSegmenter.segment(value), item => item.segment)
+        : Array.from(value);
+
+    const tokenizeText = (element, field) => {
+      const existing = Array.from(
+        element.querySelectorAll(`[data-article-transition-token="${field}"]`)
+      );
+      if (existing.length) return existing;
+
+      const textNodes = [];
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      let current = walker.nextNode();
+      while (current) {
+        if (current.nodeValue) textNodes.push(current);
+        current = walker.nextNode();
+      }
+
+      const tokens = [];
+      for (const textNode of textNodes) {
+        const fragment = document.createDocumentFragment();
+        for (const segment of splitGraphemes(textNode.nodeValue ?? "")) {
+          if (!segment || /^\s+$/u.test(segment)) {
+            fragment.append(segment);
+            continue;
+          }
+
+          const token = document.createElement("span");
+          token.dataset.articleTransitionToken = field;
+          token.dataset.articleTransitionTokenIndex = String(tokens.length);
+          token.textContent = segment;
+          fragment.append(token);
+          tokens.push(token);
+        }
+        textNode.replaceWith(fragment);
+      }
+
+      return tokens;
+    };
+
+    const unwrapTextTokens = element => {
+      const parents = new Set();
+      element
+        .querySelectorAll("[data-article-transition-token]")
+        .forEach(token => {
+          if (!token.parentNode) return;
+          parents.add(token.parentNode);
+          token.replaceWith(token.textContent ?? "");
+        });
+      parents.forEach(parent => parent.normalize());
+    };
+
+    const getVisibleTokenCount = (element, tokens) => {
+      const bounds = element.getBoundingClientRect();
+      let lastVisibleIndex = -1;
+
+      tokens.forEach((token, index) => {
+        const visible = Array.from(token.getClientRects()).some(
+          rect =>
+            rect.right > bounds.left &&
+            rect.left < bounds.right &&
+            rect.bottom > bounds.top &&
+            rect.top < bounds.bottom
+        );
+        if (visible) lastVisibleIndex = index;
+      });
+
+      return lastVisibleIndex + 1;
+    };
+
+    const hashTokens = (tokens, count) => {
+      let hash = 2166136261;
+      for (const token of tokens.slice(0, count)) {
+        for (const character of token.textContent ?? "") {
+          hash ^= character.codePointAt(0) ?? 0;
+          hash = Math.imul(hash, 16777619);
+        }
+      }
+      return (hash >>> 0).toString(36);
+    };
+
+    const getTokenName = (key, field, index) =>
+      `article-${field}-token-${key}-${index}`;
+
+    const getBlockTextState = () => ({
+      title: { mode: "block" },
+      excerpt: { mode: "block" },
+    });
+
+    const prepareTextTransition = (info, element, names) => {
+      const sharedText = getSharedText(element);
+      const expectedText = {
+        title: element.dataset.articleTransitionTitleText ?? "",
+        excerpt: element.dataset.articleTransitionExcerptText ?? "",
+      };
+      const createsState = info.side === "list" && info.direction === "open";
+      const state = createsState
+        ? {}
+        : (info.textTransition ?? getBlockTextState());
+      const blockElements = [];
+      const tokenElements = [];
+      const tokenNames = [];
+      const tokenizedElements = new Set();
+
+      for (const field of ["title", "excerpt"]) {
+        const textElement = sharedText[field];
+        const blockName = names[field];
+        const maxTokens =
+          field === "title" ? MAX_TITLE_TOKENS : MAX_EXCERPT_TOKENS;
+
+        if (
+          !textElement ||
+          !expectedText[field] ||
+          normalizeSharedText(textElement.textContent) !==
+            normalizeSharedText(expectedText[field])
+        ) {
+          if (!createsState && state[field]?.mode === "tokens") {
+            tokenizedElements.forEach(unwrapTextTokens);
+            return null;
+          }
+          if (createsState) state[field] = { mode: "block" };
+          blockElements.push([textElement, blockName]);
+          continue;
+        }
+
+        const fieldState = state[field];
+        if (!createsState && fieldState?.mode !== "tokens") {
+          blockElements.push([textElement, blockName]);
+          continue;
+        }
+
+        const tokens = tokenizeText(textElement, field);
+        tokenizedElements.add(textElement);
+        const count = createsState
+          ? field === "title"
+            ? tokens.length
+            : getVisibleTokenCount(textElement, tokens)
+          : fieldState.count;
+
+        if (
+          !Number.isInteger(count) ||
+          count < 1 ||
+          count > maxTokens ||
+          tokens.length < count
+        ) {
+          if (createsState) state[field] = { mode: "block" };
+          unwrapTextTokens(textElement);
+          tokenizedElements.delete(textElement);
+          blockElements.push([textElement, blockName]);
+          continue;
+        }
+
+        const hash = hashTokens(tokens, count);
+        if (!createsState && hash !== fieldState.hash) {
+          tokenizedElements.forEach(unwrapTextTokens);
+          return null;
+        }
+
+        if (createsState) {
+          state[field] = { mode: "tokens", count, hash };
+        }
+
+        tokens.slice(0, count).forEach((token, index) => {
+          const tokenName = getTokenName(info.key, field, index);
+          tokenElements.push([token, tokenName]);
+          tokenNames.push(tokenName);
+        });
+      }
+
+      info.textTransition = state;
+      return {
+        blockElements: blockElements.filter(([item]) => item),
+        tokenElements,
+        tokenNames,
+        cleanup: () => tokenizedElements.forEach(unwrapTextTokens),
+      };
+    };
+
     const rememberOrigin = info => {
       const origins = readSessionValue(ORIGINS_KEY, {});
       origins[info.articlePath] = {
@@ -127,6 +319,7 @@
         searchQuery: info.searchQuery,
         searchResultPaths: info.searchResultPaths,
         searchStatusText: info.searchStatusText,
+        textTransition: info.textTransition,
       };
       writeSessionValue(ORIGINS_KEY, origins);
     };
@@ -177,18 +370,67 @@
         .forEach(element => (element.hidden = true));
     };
 
-    const installRuntimeStyles = (names, direction) => {
+    const installRuntimeStyles = (names, direction, tokenNames = []) => {
       document.getElementById("article-transition-runtime")?.remove();
       const style = document.createElement("style");
       style.id = "article-transition-runtime";
-      const isClosing = direction === "close";
-      const textMoveDuration = isClosing ? "280ms" : "340ms";
-      const oldTextAnimation = isClosing
-        ? "article-transition-text-close-old 280ms linear both"
-        : "article-transition-text-open-old 340ms linear both";
-      const newTextAnimation = isClosing
-        ? "article-transition-text-close-new 60ms cubic-bezier(0.22, 1, 0.36, 1) 280ms both"
-        : "article-transition-text-open-new 340ms linear both";
+      const tokenSelector = (pseudo, names = tokenNames) =>
+        names.map(name => `::view-transition-${pseudo}(${name})`).join(",\n");
+      const titleTokenNames = tokenNames.filter(name =>
+        name.startsWith("article-title-token-")
+      );
+      const excerptTokenNames = tokenNames.filter(name =>
+        name.startsWith("article-excerpt-token-")
+      );
+      const tokenOpacityStyles = (names, oldKeyframes, newKeyframes) =>
+        names.length
+          ? `
+        ${tokenSelector("old", names)} {
+          animation: ${oldKeyframes} 320ms linear both;
+        }
+
+        ${tokenSelector("new", names)} {
+          animation: ${newKeyframes} 320ms linear both;
+        }
+      `
+          : "";
+      const tokenStyles = tokenNames.length
+        ? `
+        ${tokenSelector("group")} {
+          z-index: 4;
+          animation-duration: 320ms;
+          animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          animation-fill-mode: both;
+        }
+
+        ${tokenSelector("image-pair")} {
+          overflow: visible;
+          isolation: isolate;
+        }
+
+        ${tokenSelector("old")},
+        ${tokenSelector("new")} {
+          width: 100%;
+          height: 100%;
+          mix-blend-mode: normal;
+          backface-visibility: hidden;
+          object-fit: contain;
+          object-position: center;
+          transform-origin: center;
+        }
+
+        ${tokenOpacityStyles(
+          titleTokenNames,
+          "article-transition-token-old",
+          "article-transition-token-new"
+        )}
+        ${tokenOpacityStyles(
+          excerptTokenNames,
+          "article-transition-excerpt-token-old",
+          "article-transition-excerpt-token-new"
+        )}
+      `
+        : "";
       style.textContent = `
         ::view-transition-group(${names.detailPage}) {
           z-index: 0;
@@ -252,7 +494,7 @@
         ::view-transition-group(${names.title}),
         ::view-transition-group(${names.excerpt}) {
           z-index: 4;
-          animation-duration: ${textMoveDuration};
+          animation-duration: 320ms;
           animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
           animation-fill-mode: both;
         }
@@ -281,20 +523,22 @@
         }
 
         ::view-transition-old(${names.title}) {
-          animation: ${oldTextAnimation};
+          animation: article-transition-text-old 320ms linear both;
         }
 
         ::view-transition-new(${names.title}) {
-          animation: ${newTextAnimation};
+          animation: article-transition-text-new 320ms linear both;
         }
 
         ::view-transition-old(${names.excerpt}) {
-          animation: ${oldTextAnimation};
+          animation: article-transition-text-old 320ms linear both;
         }
 
         ::view-transition-new(${names.excerpt}) {
-          animation: ${newTextAnimation};
+          animation: article-transition-text-new 320ms linear both;
         }
+
+        ${tokenStyles}
 
         ::view-transition-group(${names.listMeta}),
         ::view-transition-group(${names.detailMeta}) {
@@ -341,7 +585,8 @@
       if (!element) return null;
 
       const names = getNames(info.key);
-      const sharedText = getSharedText(element);
+      const preparedText = prepareTextTransition(info, element, names);
+      if (!preparedText) return null;
       const root = document.documentElement;
       const page = document.querySelector("main");
       // Only the opening detail page gets a page-level fade. On return, the
@@ -367,8 +612,8 @@
             : null,
           names.cover,
         ],
-        [sharedText.title, names.title],
-        [sharedText.excerpt, names.excerpt],
+        ...preparedText.blockElements,
+        ...preparedText.tokenElements,
         [
           element.querySelector("[data-article-transition-meta]"),
           info.side === "list" ? names.listMeta : names.detailMeta,
@@ -377,13 +622,18 @@
       sharedElements.forEach(
         ([element, name]) => (element.style.viewTransitionName = name)
       );
-      const runtimeStyles = installRuntimeStyles(names, info.direction);
+      const runtimeStyles = installRuntimeStyles(
+        names,
+        info.direction,
+        preparedText.tokenNames
+      );
 
       return () => {
         sharedElements.forEach(
           ([element]) => (element.style.viewTransitionName = "")
         );
         runtimeStyles.remove();
+        preparedText.cleanup();
         root.style.viewTransitionName = previousRootName;
         delete root.dataset.articleTransition;
       };
@@ -445,6 +695,7 @@
         searchQuery: origin.searchQuery ?? "",
         searchResultPaths: origin.searchResultPaths ?? [],
         searchStatusText: origin.searchStatusText ?? "",
+        textTransition: origin.textTransition ?? getBlockTextState(),
         detail,
       };
     };
@@ -479,6 +730,7 @@
             searchQuery: origin.searchQuery ?? "",
             searchResultPaths: origin.searchResultPaths ?? [],
             searchStatusText: origin.searchStatusText ?? "",
+            textTransition: origin.textTransition ?? getBlockTextState(),
           };
         }
         if (
@@ -499,6 +751,10 @@
         context?.searchResultPaths ?? origin?.searchResultPaths ?? [];
       const searchStatusText =
         context?.searchStatusText ?? origin?.searchStatusText ?? "";
+      const textTransition =
+        context?.textTransition ??
+        origin?.textTransition ??
+        getBlockTextState();
       const card = articlePath
         ? findCard(articlePath, Boolean(searchQuery))
         : null;
@@ -519,6 +775,7 @@
           searchQuery,
           searchResultPaths,
           searchStatusText,
+          textTransition,
         };
       }
       if (
@@ -535,6 +792,7 @@
         searchQuery,
         searchResultPaths,
         searchStatusText,
+        textTransition,
         side: "list",
         card,
       };
@@ -582,6 +840,13 @@
         return;
       }
 
+      const cleanup = prepareTransition(info);
+      if (!cleanup) {
+        skipTransition(event.viewTransition);
+        removeSessionValue(NAVIGATION_CONTEXT_KEY);
+        return;
+      }
+
       if (info.direction === "open") rememberOrigin(info);
       writeSessionValue(NAVIGATION_CONTEXT_KEY, {
         direction: info.direction,
@@ -593,14 +858,8 @@
         searchQuery: info.searchQuery,
         searchResultPaths: info.searchResultPaths,
         searchStatusText: info.searchStatusText,
+        textTransition: info.textTransition,
       });
-
-      const cleanup = prepareTransition(info);
-      if (!cleanup) {
-        skipTransition(event.viewTransition);
-        removeSessionValue(NAVIGATION_CONTEXT_KEY);
-        return;
-      }
       outgoingCleanup = cleanup;
       event.viewTransition.finished.then(cleanup, cleanup);
     });
