@@ -90,8 +90,12 @@ const placeholderText = title.trim().charAt(0) || "安";
           <span>{formattedWordCount} 字</span>
         </div>
 
-        <h3 class="post-card-title">{title}</h3>
-        <p class="post-card-description">{description}</p>
+        <h3 class="post-card-title" data-article-transition-title>
+          {title}
+        </h3>
+        <p class="post-card-description" data-article-transition-excerpt>
+          {description}
+        </p>
       </div>
     </a>
   </article>
