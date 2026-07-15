@@ -81,10 +81,10 @@
 
 @keyframes article-transition-text-close-old {
   0%,
-  70% {
+  88% {
     opacity: 1;
   }
-  86%,
+  96%,
   100% {
     opacity: 0;
   }
@@ -92,10 +92,10 @@
 
 @keyframes article-transition-text-close-new {
   0%,
-  70% {
+  88% {
     opacity: 0;
   }
-  86%,
+  96%,
   100% {
     opacity: 1;
   }
