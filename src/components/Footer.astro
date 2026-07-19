@@ -15,15 +15,23 @@ const currentYear = new Date().getFullYear();
         <a class="transition link text-[var(--primary)]" target="_blank" href="https://astro.build">Astro</a> &
         <a class="transition link text-[var(--primary)]" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
         <br>
-        <span class="inline-flex items-center justify-center gap-3 flex-wrap mt-1">
+        <span class="flex flex-col sm:inline-flex items-center justify-center gap-[10px] sm:gap-3 sm:flex-wrap mt-0 sm:mt-1">
             <a class="inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index">
-                <img src="/icp.png" alt="ICP备案" class="inline-block" style="height: 14px; width: auto; vertical-align: middle; transform: translateY(-1.5px);" />
+                <img src="/icp.png" alt="ICP备案" class="filing-icon inline-block" style="height: 14px; width: auto; vertical-align: middle; transform: translateY(-1.5px);" />
                 苏ICP备2026009777号-1
             </a>
             <a class="inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" href="https://beian.mps.gov.cn/#/query/webSearch?code=32059002007595">
-                <img src="/gongan.png" alt="公安备案" class="inline-block" style="height: 14px; width: auto; vertical-align: middle; transform: translateY(-1.5px);" />
+                <img src="/gongan.png" alt="公安备案" class="filing-icon inline-block" style="height: 14px; width: auto; vertical-align: middle; transform: translateY(-1.5px);" />
                 苏公网安备 32059002007595号
             </a>
         </span>
     </div>
 </div>
+
+<style>
+    @media (max-width: 640px) {
+        .filing-icon {
+            transform: translateY(-0.5px) !important;
+        }
+    }
+</style>
