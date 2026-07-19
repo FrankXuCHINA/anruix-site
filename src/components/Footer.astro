@@ -1,7 +1,6 @@
 ---
 
 import { profileConfig } from "../config";
-import { url } from "../utils/url-utils";
 
 const currentYear = new Date().getFullYear();
 ---
@@ -11,11 +10,21 @@ const currentYear = new Date().getFullYear();
 <!--<div class="transition bg-[oklch(92%_0.01_var(&#45;&#45;hue))] dark:bg-black rounded-2xl py-8 mt-4 mb-8 flex flex-col items-center justify-center px-6">-->
 <div class="transition border-dashed border-[oklch(85%_0.01_var(--hue))] dark:border-white/15 rounded-2xl mb-12 flex flex-col items-center justify-center px-6">
     <div class="transition text-50 text-sm text-center">
-        &copy; <span id="copyright-year">{currentYear}</span> {profileConfig.name}. All Rights Reserved. /
-        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('rss.xml')}>RSS</a> /
-        <a class="transition link text-[var(--primary)] font-medium" target="_blank" href={url('sitemap-index.xml')}>Sitemap</a><br>
+        &copy; <span id="copyright-year">{currentYear}</span> {profileConfig.name}的小站 ·
         Powered by
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://astro.build">Astro</a> &
         <a class="transition link text-[var(--primary)] font-medium" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
+        <br>
+        <span class="inline-flex items-center justify-center gap-[2px] flex-wrap">
+            <a class="transition link hover:text-[var(--primary)] font-medium inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index">
+                <img src="/icp.png" alt="ICP备案" class="inline-block align-middle" style="height: 14px; width: auto;" />
+                苏ICP备2026009777号-1
+            </a>
+            ·
+            <a class="transition link hover:text-[var(--primary)] font-medium inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" href="https://beian.mps.gov.cn/#/query/webSearch?code=32059002007595">
+                <img src="/gongan.png" alt="公安备案" class="inline-block align-middle" style="height: 14px; width: auto;" />
+                苏公网安备 32059002007595号
+            </a>
+        </span>
     </div>
 </div>
