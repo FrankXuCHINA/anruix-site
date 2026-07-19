@@ -9,13 +9,15 @@ const currentYear = new Date().getFullYear();
 <div class="transition border-t border-black/10 dark:border-white/15 my-10 border-dashed mx-32"></div>
 <!--<div class="transition bg-[oklch(92%_0.01_var(&#45;&#45;hue))] dark:bg-black rounded-2xl py-8 mt-4 mb-8 flex flex-col items-center justify-center px-6">-->
 <div class="transition border-dashed border-[oklch(85%_0.01_var(--hue))] dark:border-white/15 rounded-2xl mb-12 flex flex-col items-center justify-center px-6">
-    <div class="transition text-50 text-[14px] leading-[1.5] font-medium text-center">
-        &copy; <span id="copyright-year">{currentYear}</span> {profileConfig.name}的小站
-        &nbsp; Powered by
-        <a class="transition link text-[var(--primary)]" target="_blank" href="https://astro.build">Astro</a> &
-        <a class="transition link text-[var(--primary)]" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
-        <br>
-        <span class="flex flex-col sm:inline-flex items-center justify-center gap-[10px] sm:gap-3 sm:flex-wrap mt-0 sm:mt-1">
+    <div class="footer-content transition text-50 text-[14px] leading-[1.5] font-medium text-center">
+        <span class="copyright-line">
+            &copy; <span id="copyright-year">{currentYear}</span> {profileConfig.name}的小站
+            &nbsp; Powered by
+            <a class="transition link text-[var(--primary)]" target="_blank" href="https://astro.build">Astro</a> &
+            <a class="transition link text-[var(--primary)]" target="_blank" href="https://github.com/saicaca/fuwari">Fuwari</a>
+        </span>
+        <br class="footer-br">
+        <span class="filing-row inline-flex items-center justify-center gap-3 flex-wrap mt-1">
             <a class="inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/#/Integrated/index">
                 <img src="/icp.png" alt="ICP备案" class="filing-icon inline-block" style="height: 14px; width: auto; vertical-align: middle; transform: translateY(-1.5px);" />
                 苏ICP备2026009777号-1
@@ -30,8 +32,22 @@ const currentYear = new Date().getFullYear();
 
 <style>
     @media (max-width: 640px) {
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .footer-content .footer-br {
+            display: none;
+        }
+        .filing-row {
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 0;
+        }
         .filing-icon {
-            transform: translateY(-0.5px) !important;
+            transform: translateY(-1px) !important;
         }
     }
 </style>
