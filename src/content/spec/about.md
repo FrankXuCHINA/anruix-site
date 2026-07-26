@@ -1,9 +1,30 @@
-# About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
+# 关于
 
-::github{repo="saicaca/fuwari"}
+:::note[关于本站]
+这里是 **安锐的小站**，一个围绕摄影、摄像与后期制作的个人记录站。
+:::
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+建立这个网站，是为了把学习过程中真正理解的知识、方法和经验整理下来。
+
+相比零散地收藏教程，我更希望通过持续记录、实践和复盘，让每一次学习都留下清晰的痕迹，也方便以后重新查阅和修正。
+
+## 主要内容
+
+- **拍摄技巧**  
+  曝光、对焦、构图、用光、运镜与拍摄参数等内容。
+
+- **后期制作**  
+  修图、剪辑、调色、素材管理与输出流程等内容。
+
+- **创作记录**  
+  摄影作品、视频创作、拍摄过程以及项目复盘。
+
+## 关于内容
+
+这里记录的是学习与实践中的阶段性理解，不一定是唯一答案。
+
+随着经验积累，部分内容也会持续补充、修正和更新。
+
+---
+
+> 念念不忘，必有回响。
