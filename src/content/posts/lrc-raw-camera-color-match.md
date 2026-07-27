@@ -1,5 +1,5 @@
 ---
-title: Lightroom：RAW 自动匹配相机色彩
+title: LrC：RAW 自动匹配相机色彩
 published: 2026-07-27
 description: 将 RAW 默认值设为“相机设置”，让新导入的照片自动匹配相机色彩配置。
 image: https://img.anruix.com/posts/lightroom-raw-color-match-cover.png
