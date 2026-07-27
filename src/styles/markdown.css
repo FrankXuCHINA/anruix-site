@@ -125,3 +125,34 @@
     }
     
 }
+
+/* Lightroom 教程截图：仅匹配本篇文章使用的三张图床图片 */
+.custom-md p:has(> img[src="https://img.anruix.com/posts/01-lightroom-classic-open-preferences.png"]),
+.custom-md p:has(> img[src="https://img.anruix.com/posts/02-lightroom-classic-raw-default-settings.png"]),
+.custom-md p:has(> img[src="https://img.anruix.com/posts/03-lightroom-classic-select-camera-settings.png"]) {
+    margin-block: 1.5rem;
+}
+
+.custom-md img[src="https://img.anruix.com/posts/01-lightroom-classic-open-preferences.png"],
+.custom-md img[src="https://img.anruix.com/posts/02-lightroom-classic-raw-default-settings.png"],
+.custom-md img[src="https://img.anruix.com/posts/03-lightroom-classic-select-camera-settings.png"] {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border: 1px solid var(--line-divider);
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}
+
+.custom-md img[src="https://img.anruix.com/posts/01-lightroom-classic-open-preferences.png"] {
+    max-width: 405px;
+}
+
+.custom-md img[src="https://img.anruix.com/posts/02-lightroom-classic-raw-default-settings.png"] {
+    max-width: 32rem;
+}
+
+.custom-md img[src="https://img.anruix.com/posts/03-lightroom-classic-select-camera-settings.png"] {
+    max-width: 292px;
+}
