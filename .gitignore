@@ -30,3 +30,4 @@ yarn.lock
 # ide
 .idea
 *.iml
+AGENTS.md
