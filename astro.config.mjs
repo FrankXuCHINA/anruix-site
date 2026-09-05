@@ -49,7 +49,6 @@ export default defineConfig({
 		}),
 		icon({
 			include: {
-				"preprocess: vitePreprocess(),": ["*"],
 				"fa6-brands": ["*"],
 				"fa6-regular": ["*"],
 				"fa6-solid": ["*"],
@@ -152,21 +151,5 @@ export default defineConfig({
 				},
 			],
 		],
-	},
-	vite: {
-		build: {
-			rollupOptions: {
-				onwarn(warning, warn) {
-					// temporarily suppress this warning
-					if (
-						warning.message.includes("is dynamically imported by") &&
-						warning.message.includes("but also statically imported by")
-					) {
-						return;
-					}
-					warn(warning);
-				},
-			},
-		},
 	},
 });

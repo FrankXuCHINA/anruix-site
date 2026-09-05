@@ -14,16 +14,21 @@ const className = Astro.props.class;
 </div>
 
 <script>
-document.addEventListener("click", function (e: MouseEvent) {
-    const target = e.target as Element | null;
-    if (target && target.classList.contains("copy-btn")) {
+document.addEventListener("click", async function (e: MouseEvent) {
+    const target = e.target instanceof Element ? e.target.closest<HTMLButtonElement>(".copy-btn") : null;
+    if (target) {
         const preEle = target.closest("pre");
         const codeEle = preEle?.querySelector("code");
         const code = Array.from(codeEle?.querySelectorAll(".code:not(summary *)") ?? [])
             .map(el => el.textContent)
             .map(t => t === "\n" ? "" : t)
             .join("\n");
-        navigator.clipboard.writeText(code);
+        try {
+            await navigator.clipboard.writeText(code);
+        } catch (error) {
+            console.error("Failed to copy code:", error);
+            return;
+        }
 
         const timeoutId = target.getAttribute("data-timeout-id");
         if (timeoutId) {

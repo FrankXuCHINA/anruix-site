@@ -1,5 +1,6 @@
 ---
 import path from "node:path";
+import type { ImageMetadata } from "astro";
 
 interface Props {
 	id?: string;
@@ -8,12 +9,20 @@ interface Props {
 	alt?: string;
 	position?: string;
 	basePath?: string;
+	width?: number;
 }
 
 import { Image } from "astro:assets";
 import { url } from "../../utils/url-utils";
 
-const { id, src, alt, position = "center", basePath = "/" } = Astro.props;
+const {
+	id,
+	src,
+	alt,
+	position = "center",
+	basePath = "/",
+	width,
+} = Astro.props;
 const className = Astro.props.class;
 
 const isLocal = !(
@@ -24,21 +33,21 @@ const isLocal = !(
 );
 const isPublic = src.startsWith("/");
 
-// TODO temporary workaround for images dynamic import
-// https://github.com/withastro/astro/issues/3373
-// biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
-let img;
+let img: ImageMetadata | undefined;
 if (isLocal) {
-	const files = import.meta.glob<ImageMetadata>("../../**", {
-		import: "default",
-	});
-	let normalizedPath = path
+	const files = import.meta.glob<ImageMetadata>(
+		"../../**/*.{jpeg,jpg,png,tiff,webp,gif,svg,avif,JPEG,JPG,PNG,TIFF,WEBP,GIF,SVG,AVIF}",
+		{
+			import: "default",
+		},
+	);
+	const normalizedPath = path
 		.normalize(path.join("../../", basePath, src))
 		.replace(/\\/g, "/");
 	const file = files[normalizedPath];
 	if (!file) {
-		console.error(
-			`\n[ERROR] Image file not found: ${normalizedPath.replace("../../", "src/")}`,
+		throw new Error(
+			`Image file not found: ${normalizedPath.replace("../../", "src/")}`,
 		);
 	}
 	img = await file();
@@ -49,6 +58,6 @@ const imageStyle = `object-position: ${position}`;
 ---
 <div id={id} class:list={[className, 'overflow-hidden relative']}>
     <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
-    {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle}/>}
+    {isLocal && img && <Image src={img} width={width} alt={alt || ""} class={imageClass} style={imageStyle}/>}
     {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>}
 </div>

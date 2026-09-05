@@ -17,12 +17,15 @@ function stripInvalidXmlChars(str: string): string {
 }
 
 export async function GET(context: APIContext): Promise<Response> {
+	if (!context.site) {
+		throw new Error("RSS requires the site URL in astro.config.mjs");
+	}
 	const blog = await getSortedPosts();
 
 	return rss({
 		title: siteConfig.title,
-		description: siteConfig.subtitle || "No description",
-		site: context.site ?? "https://fuwari.vercel.app",
+		description: siteConfig.description,
+		site: context.site,
 		items: blog.map((post) => {
 			const content =
 				typeof post.body === "string" ? post.body : String(post.body || "");
@@ -37,6 +40,6 @@ export async function GET(context: APIContext): Promise<Response> {
 				}),
 			};
 		}),
-		customData: `<language>${siteConfig.lang}</language>`,
+		customData: `<language>${siteConfig.lang.replace("_", "-")}</language>`,
 	});
 }

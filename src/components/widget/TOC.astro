@@ -258,7 +258,7 @@ class TableOfContents extends HTMLElement {
             this.observer.unobserve(section)
         );
         this.observer.disconnect();
-        this.tocEl?.removeEventListener("click", this.handleAnchorClick);
+        this.tocEl?.removeEventListener("click", this.handleAnchorClick, true);
     };
 }
 
