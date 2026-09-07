@@ -218,3 +218,9 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - 根因是 Phase 1A 的 Tailwind 4 全局入口未接回现有 `main.css`、主题变量、Markdown、过渡、滚动条和 PhotoSwipe 样式，同时旧文件中的自定义 utility 与 `@apply ... !important` 写法不兼容 Tailwind 4。现已恢复原样式入口、显式扫描 `src`，并只做对应语法适配；未改 Navbar/Profile/Sidebar/PostCard 结构或视觉设计。
 - 桌面首页恢复卡片、主题背景、导航浮层关闭态、分页和响应式网格；移动 About 无横向溢出，正文、头像、分类与备案 Footer 保留。`hue=250`、Roboto 字体体系、既有页面和内容不变。
 - 头像同时被 SEO 静态导入与 `ImageWrapper` 动态 glob 命中的 Vite 告警在 Phase 1A 前已存在，且不影响输出；其消除需要调整资源接口或 SEO 路径，留待对应后续阶段处理，本次不扩大范围。
+
+## Phase 1B.1 内容 Schema 与路由兼容（2026-09-07）
+
+- posts/spec 继续使用 `src/content.config.ts` 的 Astro 7 glob Content Layer；现有字段与默认值（含 `showCoverInPost=true`、draft、描述、图片、标签、分类、语言和前后篇字段）保持。文章与 About 源文件哈希均与 Phase 0 一致。
+- 移除 Phase 1A 伪造 `entry.slug`/`entry.render()` 的桥接，集合、分页与组件传递原生 `CollectionEntry`，统一使用 `render(entry)`。新增唯一的 `entry.id` 规范化入口，兼容斜杠及 `.md`/`.mdx` 后缀，再由同一 URL helper 生成 `/posts/{slug}/`。
+- 构建仍仅生成 `/`、`/about/`、`/archive/`、`/posts/lrc-raw-camera-color-match/` 四个 HTML 页面；单页情况下不生成 `/1/` 或 `/2/`。Archive 序列化数据保留全部文章字段，首页、RSS 与 sitemap 均引用原文章 URL。RSS 仅为原生 entry 类型做必要的一行 URL helper 适配，最终 RSS 验收仍属 1E。

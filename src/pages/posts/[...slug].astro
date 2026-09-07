@@ -1,12 +1,13 @@
 ---
 import path from "node:path";
+import { render } from "astro:content";
 import License from "@components/misc/License.astro";
 import Markdown from "@components/misc/Markdown.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { getSortedPosts } from "@utils/content-utils";
-import { getDir, getPostUrlBySlug, url } from "@utils/url-utils";
+import { getDir, getPostSlug, getPostUrlBySlug, url } from "@utils/url-utils";
 import { Icon } from "astro-icon/components";
 import { licenseConfig } from "@/config";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
@@ -17,15 +18,15 @@ import { formatDateToYYYYMMDD } from "../../utils/date-utils";
 export async function getStaticPaths() {
 	const blogEntries = await getSortedPosts();
 	return blogEntries.map((entry) => ({
-		params: { slug: entry.slug },
+		params: { slug: getPostSlug(entry.id) },
 		props: { entry },
 	}));
 }
 
 const { entry } = Astro.props;
-const { Content, headings, remarkPluginFrontmatter } = await entry.render();
+const { Content, headings, remarkPluginFrontmatter } = await render(entry);
 const description = entry.data.description || remarkPluginFrontmatter.excerpt || siteConfig.description;
-const canonicalURL = new URL(getPostUrlBySlug(entry.slug), Astro.site).href;
+const canonicalURL = new URL(getPostUrlBySlug(entry.id), Astro.site).href;
 // Source-relative covers need asset resolution; keep a valid site image as their fallback.
 const socialImage = /^https?:\/\//i.test(entry.data.image)
 	? entry.data.image
@@ -123,7 +124,7 @@ const jsonLdString = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
                 <Content />
             </Markdown>
 
-            {licenseConfig.enable && <License title={entry.data.title} slug={entry.slug} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
+            {licenseConfig.enable && <License title={entry.data.title} slug={getPostSlug(entry.id)} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
 
         </div>
     </div>
