@@ -1,5 +1,12 @@
 @import "tailwindcss" source(none);
+@import "./main.css";
+@import "./markdown.css";
+@import "./expressive-code.css";
+@import "./transition.css";
+@import "./scrollbar.css";
+@import "./photoswipe.css";
 @config "../../tailwind.config.cjs";
+@source "../";
 
 /* Exclude legacy commented examples containing HTML-escaped CSS variables. */
 @source not inline("max-w-[var(&#45;&#45;page-width)] border-[var(&#45;&#45;primary)] bg-[oklch(92%_0.01_var(&#45;&#45;hue))]");

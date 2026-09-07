@@ -212,3 +212,9 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - 冒烟：首页模块/三分类计数 0/1/0 存在；About 与文章的规范化正文、标题锚点及非头像图片 URL 对比一致；真实文章详情无封面，三张正文图保留。内容、About、头像、favicon、备案资源和原站配置与 HEAD 无差异。原 4 条 HTML 路由、robots/RSS/sitemap 文件保留，后三者字节一致；head 差异仅 Astro generator 和头像生成文件哈希，文章分享图不变。桌面首页与移动 About 已检查，备案链接仍在。
 - 外部资源冒烟：旧/新首页均只观察到原图床和原 Iconify API；未加入 Firefly Demo、Zen Maru Gothic 或新外部抓取逻辑。CI 保留 Node 22/24、原触发分支/Actions/静态命令，仅补禁用遥测；远端 CI 未运行，托管后台仍未核实且未调整。构建仅余既有头像静态/动态导入告警，无 1A 构建阻塞。
 - 本地证据位于临时目录 `%TEMP%/anruix-phase1a/`：旧 dist、页面/head/正文比对 JSON、桌面首页与移动 About 截图；不进入站点或版本库。后续从 1B 继续，1C/1D/1E/Phase 2 的最终验收均未提前完成。
+
+## Phase 1A.1 兼容修复（2026-09-07）
+
+- 根因是 Phase 1A 的 Tailwind 4 全局入口未接回现有 `main.css`、主题变量、Markdown、过渡、滚动条和 PhotoSwipe 样式，同时旧文件中的自定义 utility 与 `@apply ... !important` 写法不兼容 Tailwind 4。现已恢复原样式入口、显式扫描 `src`，并只做对应语法适配；未改 Navbar/Profile/Sidebar/PostCard 结构或视觉设计。
+- 桌面首页恢复卡片、主题背景、导航浮层关闭态、分页和响应式网格；移动 About 无横向溢出，正文、头像、分类与备案 Footer 保留。`hue=250`、Roboto 字体体系、既有页面和内容不变。
+- 头像同时被 SEO 静态导入与 `ImageWrapper` 动态 glob 命中的 Vite 告警在 Phase 1A 前已存在，且不影响输出；其消除需要调整资源接口或 SEO 路径，留待对应后续阶段处理，本次不扩大范围。
