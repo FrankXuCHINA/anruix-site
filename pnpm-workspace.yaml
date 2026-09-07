@@ -1,0 +1,8 @@
+packages:
+  - '.'
+
+# Only the native tools used by this static build may run install scripts.
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  sharp: true

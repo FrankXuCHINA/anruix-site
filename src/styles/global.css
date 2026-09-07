@@ -1,0 +1,15 @@
+@import "tailwindcss" source(none);
+@config "../../tailwind.config.cjs";
+
+/* Exclude legacy commented examples containing HTML-escaped CSS variables. */
+@source not inline("max-w-[var(&#45;&#45;page-width)] border-[var(&#45;&#45;primary)] bg-[oklch(92%_0.01_var(&#45;&#45;hue))]");
+
+/* Preserve Tailwind 3 defaults while the original UI remains in place. */
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}

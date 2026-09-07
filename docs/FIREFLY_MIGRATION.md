@@ -200,3 +200,15 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 [ff-post]: https://github.com/CuteLeaf/Firefly/blob/db331cff041a1b264026fcee36930fab4d2485db/src/pages/posts/%5B...slug%5D.astro
 [ff-footer]: https://github.com/CuteLeaf/Firefly/blob/db331cff041a1b264026fcee36930fab4d2485db/src/components/layout/Footer.astro
 [ff-deploy]: https://github.com/CuteLeaf/Firefly/blob/db331cff041a1b264026fcee36930fab4d2485db/.github/workflows/deploy.yml
+
+## Phase 1A 执行记录（2026-09-07）
+
+- 前置确认：`firefly-migration`，开始时工作区干净；baseline=`573b4044a4b5b4394d426f516d39804c7b5be19c`，规划=`1a848c62143837787c62a9be7dd8873fbd31308d`。上游沿用本文固定快照 `db331cff041a1b264026fcee36930fab4d2485db`，未重新全量审计或导入 Demo。
+- 技术底座：Astro 7.2.10 / `@astrojs/svelte` 9.0.1 / Svelte 5.57.0 / Tailwind 4.3.3（Vite 插件）/ TypeScript 6.0.3 / pnpm 11.22.0。实测 Node 24.14.1，声明最低 Node 22.23.0；lockfile 固化解析结果，pnpm workspace 仅批准 watcher/esbuild/sharp 的构建脚本。移除旧 Tailwind Astro/PostCSS 集成；`global.css` + 旧配置桥接保留 class 暗色模式、字体及部分 v3 默认值。
+- Firefly 原生架构采用 Content Layer 的 `src/content.config.ts` + glob，以及 Astro 7 的 `markdown.processor: unified(...)`；保留本地 posts/spec Schema 和原 Markdown 插件顺序。没有搬入上游业务配置、素材、页面、Cloudflare adapter 或部署 workflow。
+- 必要提前适配：`content-utils.ts` 提供旧 `slug`/`render()` 接口，PostCard/PostPage 仅调整类型，供 1B 后续收敛；文章路由只改 TS6 不再支持的 baseUrl 导入；Markdown 字体改显式 CSS 导入（同一字体包/文件），最终 Markdown 兼容仍属 1D；Layout 只接 Tailwind 入口和 `@reference`，最终 UI 属 1C。`compressHTML:false` 保留编译器升级后行内空白，防 Footer 署名连字，未改 Footer 源码；空 `src/icons` 目录避免新 astro-icon 本地目录告警。
+- 保留现 Roboto 5.2.9、JetBrains Mono Variable 5.2.8 及原 fallback 字体栈。`main.css`、其他自定义 CSS/Stylus 在旧构建中没有入口，旧首页已存在菜单重叠、色彩变量缺失；本阶段未启用这些休眠样式或修复其视觉问题，1C 接入前需明确对照。不把旧页面冒烟视为最终视觉/交互验收。
+- 验证通过：`pnpm install --frozen-lockfile`；定点 Biome format（package 保留两空格）及新内容配置/适配工具 check；`pnpm check` 56 文件、0 errors/warnings/hints；`pnpm build` 静态 4 页；Pagefind 1.5.2 索引 zh-cn 的 2 页，277 词（旧 1.4.0 为 257），生产搜索 RAW 命中原文章 URL。
+- 冒烟：首页模块/三分类计数 0/1/0 存在；About 与文章的规范化正文、标题锚点及非头像图片 URL 对比一致；真实文章详情无封面，三张正文图保留。内容、About、头像、favicon、备案资源和原站配置与 HEAD 无差异。原 4 条 HTML 路由、robots/RSS/sitemap 文件保留，后三者字节一致；head 差异仅 Astro generator 和头像生成文件哈希，文章分享图不变。桌面首页与移动 About 已检查，备案链接仍在。
+- 外部资源冒烟：旧/新首页均只观察到原图床和原 Iconify API；未加入 Firefly Demo、Zen Maru Gothic 或新外部抓取逻辑。CI 保留 Node 22/24、原触发分支/Actions/静态命令，仅补禁用遥测；远端 CI 未运行，托管后台仍未核实且未调整。构建仅余既有头像静态/动态导入告警，无 1A 构建阻塞。
+- 本地证据位于临时目录 `%TEMP%/anruix-phase1a/`：旧 dist、页面/head/正文比对 JSON、桌面首页与移动 About 截图；不进入站点或版本库。后续从 1B 继续，1C/1D/1E/Phase 2 的最终验收均未提前完成。
