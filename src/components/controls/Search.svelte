@@ -5,6 +5,7 @@ import Icon from "@iconify/svelte";
 import { url } from "@utils/url-utils.ts";
 import { onMount } from "svelte";
 import type { SearchResult } from "@/global";
+import { onPageView } from "@/utils/page-lifecycle";
 
 let keywordDesktop = "";
 let keywordMobile = "";
@@ -13,6 +14,13 @@ let isSearching = false;
 let pagefindLoaded = false;
 let initialized = false;
 let searchSequence = 0;
+let latestQuery = { keyword: "", isDesktop: true };
+
+const cancelSearch = () => {
+	searchSequence++;
+	isSearching = false;
+	latestQuery.keyword = "";
+};
 
 const fakeResult: SearchResult[] = [
 	{
@@ -49,6 +57,7 @@ const setPanelVisibility = (show: boolean, isDesktop: boolean): void => {
 };
 
 const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
+	latestQuery = { keyword, isDesktop };
 	const sequence = ++searchSequence;
 	if (!keyword) {
 		setPanelVisibility(false, isDesktop);
@@ -57,7 +66,7 @@ const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
 		return;
 	}
 
-	if (!initialized) {
+	if (!initialized || (import.meta.env.PROD && !pagefindLoaded)) {
 		return;
 	}
 
@@ -92,15 +101,17 @@ const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
 };
 
 onMount(() => {
+	let timeout: ReturnType<typeof setTimeout>;
 	const initializeSearch = () => {
+		clearTimeout(timeout);
 		initialized = true;
 		pagefindLoaded =
 			typeof window !== "undefined" &&
 			!!window.pagefind &&
 			typeof window.pagefind.search === "function";
-		console.log("Pagefind status on init:", pagefindLoaded);
-		if (keywordDesktop) search(keywordDesktop, true);
-		if (keywordMobile) search(keywordMobile, false);
+		if (latestQuery.keyword && (pagefindLoaded || import.meta.env.DEV)) {
+			search(latestQuery.keyword, latestQuery.isDesktop);
+		}
 	};
 
 	if (import.meta.env.DEV) {
@@ -109,25 +120,39 @@ onMount(() => {
 		);
 		initializeSearch();
 	} else {
-		document.addEventListener("pagefindready", () => {
-			console.log("Pagefind ready event received.");
-			initializeSearch();
-		});
-		document.addEventListener("pagefindloaderror", () => {
-			console.warn(
-				"Pagefind load error event received. Search functionality will be limited.",
-			);
-			initializeSearch(); // Initialize with pagefindLoaded as false
-		});
+		document.addEventListener("pagefindready", initializeSearch);
+		document.addEventListener("pagefindloaderror", initializeSearch);
 
 		// Fallback in case events are not caught or pagefind is already loaded by the time this script runs
-		setTimeout(() => {
+		timeout = setTimeout(() => {
 			if (!initialized) {
 				console.log("Fallback: Initializing search after timeout.");
 				initializeSearch();
 			}
 		}, 2000); // Adjust timeout as needed
+		if (window.pagefind) initializeSearch();
 	}
+	const panel = document.getElementById("search-panel");
+	const observer = new MutationObserver(() => {
+		if (panel?.classList.contains("float-panel-closed")) cancelSearch();
+	});
+	if (panel)
+		observer.observe(panel, { attributes: true, attributeFilter: ["class"] });
+	const reset = () => {
+		cancelSearch();
+		keywordDesktop = keywordMobile = "";
+		latestQuery.keyword = "";
+		result = [];
+		panel?.classList.add("float-panel-closed");
+	};
+	const stopNavigation = onPageView(() => reset);
+	return () => {
+		clearTimeout(timeout);
+		document.removeEventListener("pagefindready", initializeSearch);
+		document.removeEventListener("pagefindloaderror", initializeSearch);
+		observer.disconnect();
+		stopNavigation();
+	};
 });
 </script>
 

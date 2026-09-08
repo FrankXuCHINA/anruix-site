@@ -71,6 +71,8 @@ class TableOfContents extends HTMLElement {
     tocEntries: HTMLAnchorElement[] = [];
     active: boolean[] = [];
     activeIndicator: HTMLElement | null = null;
+    frame = 0;
+    initialized = false;
 
     constructor() {
         super();
@@ -152,7 +154,9 @@ class TableOfContents extends HTMLElement {
     };
 
     update = () => {
-        requestAnimationFrame(() => {
+        cancelAnimationFrame(this.frame);
+        this.frame = requestAnimationFrame(() => {
+            if (!this.isConnected) return;
             this.toggleActiveHeading();
             // requestAnimationFrame(() => {
             this.scrollToActiveHeading();
@@ -201,32 +205,27 @@ class TableOfContents extends HTMLElement {
     };
 
     connectedCallback() {
-        // wait for the onload animation to finish, which makes the `getBoundingClientRect` return correct values
-        const element = document.querySelector('.prose');
-        if (element) {
-            element.addEventListener('animationend', () => {
-                this.init();
-            }, { once: true });
-        } else {
-            console.debug('Animation element not found');
-        }
+        // Run after both Swup containers have been replaced, even without animation.
+        this.frame = requestAnimationFrame(() => this.init());
     };
 
     init() {
+        if (!this.isConnected || this.initialized) return;
         this.tocEl = document.getElementById(
             "toc-inner-wrapper"
         );
 
         if (!this.tocEl) return;
+        this.initialized = true;
 
         this.tocEl.addEventListener("click", this.handleAnchorClick, {
             capture: true,
         });
 
-        this.activeIndicator = document.getElementById("active-indicator");
+        this.activeIndicator = this.querySelector("#active-indicator");
 
         this.tocEntries = Array.from(
-            document.querySelectorAll<HTMLAnchorElement>("#toc a[href^='#']")
+            this.querySelectorAll<HTMLAnchorElement>("a[href^='#']")
         );
 
         if (this.tocEntries.length === 0) return;
@@ -246,7 +245,7 @@ class TableOfContents extends HTMLElement {
         this.active = new Array(this.tocEntries.length).fill(false);
 
         this.sections.forEach((section) =>
-            this.observer.observe(section)
+            section && this.observer.observe(section)
         );
 
         this.fallback();
@@ -254,11 +253,17 @@ class TableOfContents extends HTMLElement {
     };
 
     disconnectedCallback() {
-        this.sections.forEach((section) =>
-            this.observer.unobserve(section)
-        );
+        cancelAnimationFrame(this.frame);
         this.observer.disconnect();
         this.tocEl?.removeEventListener("click", this.handleAnchorClick, true);
+        this.initialized = false;
+        this.headingIdxMap.clear();
+        this.headings = [];
+        this.sections = [];
+        this.tocEntries = [];
+        this.active = [];
+        this.anchorNavTarget = null;
+        this.tocEl = null;
     };
 }
 

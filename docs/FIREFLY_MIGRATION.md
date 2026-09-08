@@ -259,3 +259,11 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - Footer 组件迁至 Firefly 的 `components/layout` 职责层，保留动态年份、“安锐的小站”和原响应式结构；技术署名更新为 Astro & Firefly。桌面/移动挂载点继续按断点互斥，以保持桌面 Footer 紧随主内容及移动端“主体、Sidebar、Footer”顺序，单一组件是备案结构与样式的唯一实现。
 - ICP/公安备案文字、`/icp.png`、`/gongan.png`、完整目标链接、`target="_blank"` 与 `rel="noopener noreferrer"` 均保留。1440px 下备案横排，375px 下版权与备案纵排、间距 10px；四个正式页面均只有一份可见 Footer，图标实测 14px，无横向溢出或 Demo Footer 内容。
 - `pnpm check` 60 文件、0 errors/warnings/hints；`pnpm build` 生成原四页，Pagefind 1.5.2 索引两页、277 词。仅余既有头像静态/动态导入告警，不属 Footer 阻塞；未触碰内容、分类、详情封面、URL 或 Phase 1E 功能。
+
+## Phase 1E.1 Search、TOC、PhotoSwipe 与 Swup（2026-09-08）
+
+- 沿固定快照的职责拆分，Search 移至 `components/controls`，PhotoSwipe 独立为 `features/PhotoSwipeManager.astro`。保留生产 Pagefind、原查询结果和双端入口；加载器改为只执行一次的 Astro 模块。ready/error/2 秒兜底监听与计时器可清理，延迟就绪只重试最近查询；关闭面板、清空、导航或卸载使旧请求失效。未增加搜索页、Demo 索引或 Fancybox。
+- `utils/page-lifecycle.ts` 统一页面功能的挂载与清理：Swup 替换前销毁，page:view 重建；重复 page:view 先清理旧实例，订阅可注销。PhotoSwipe 保留原选择器、滚轮缩放、点击/单击关闭、双击缩放和图标；公式滚动条实例及观察器随页面释放。持久 Navbar 仍只初始化一次，移除抢占 Svelte 明暗按钮的旧 onclick；导航时关闭浮层并更新导航 aria-current，取消过期过渡计时器。
+- TOC 保留最浅标题起算两级、原锚点/高亮/宽屏位置；初始化不再依赖可能错过的 animationend，改为容器替换后的帧回调。实例防重复初始化，断开时取消帧、断开观察器、对称移除 capture 点击监听并清空引用。
+- 生产浏览器：1440px/375px 搜索命中真实文章和 About，快速输入与清空正常、无横向溢出；三轮文章/About/Archive 客户端往返后 TOC 单实例、7 项及高亮恢复，搜索输入未重复，控制台无错误。1680px TOC 锚点及高亮通过；PhotoSwipe 打开、滚轮缩放、图片点击/按钮/Escape 关闭通过，未出现双灯箱。触屏双击采用原配置保留，未将桌面鼠标测试视作真实触屏手势全验。
+- 四项 `tests/navigation-interactions.test.mjs` 测试覆盖慢旧结果、清空、关闭/导航取消、超时后延迟就绪、load-error 恢复、搜索异常与五轮实例清理。定点 Biome 通过（Layout 保留既有格式，仅做 lint）；`pnpm check` 62 文件、0 errors/warnings/hints；`pnpm build` 原四页，Pagefind 两页/277 词，无本轮构建阻塞。内容、About、分类、Footer、封面规则及 URL 源文件无修改；SEO/RSS/robots/sitemap 整体验收与既有头像导入告警留下一部分。
