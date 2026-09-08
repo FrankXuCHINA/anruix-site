@@ -51,6 +51,7 @@ const jsonLd = {
 	},
 	image: socialImage,
 	keywords: entry.data.tags,
+	articleSection: entry.data.category || undefined,
 	author: {
 		"@type": "Person",
 		name: profileConfig.name,

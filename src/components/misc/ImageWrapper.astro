@@ -13,6 +13,7 @@ interface Props {
 }
 
 import { Image } from "astro:assets";
+import profileAvatar from "../../assets/images/avatar.png";
 import { url } from "../../utils/url-utils";
 
 const {
@@ -35,8 +36,12 @@ const isPublic = src.startsWith("/");
 
 let img: ImageMetadata | undefined;
 if (isLocal) {
+	const profileAvatarPath = "../../assets/images/avatar.png";
 	const files = import.meta.glob<ImageMetadata>(
-		"../../**/*.{jpeg,jpg,png,tiff,webp,gif,svg,avif,JPEG,JPG,PNG,TIFF,WEBP,GIF,SVG,AVIF}",
+		[
+			"../../**/*.{jpeg,jpg,png,tiff,webp,gif,svg,avif,JPEG,JPG,PNG,TIFF,WEBP,GIF,SVG,AVIF}",
+			"!../../assets/images/avatar.png",
+		],
 		{
 			import: "default",
 		},
@@ -44,7 +49,10 @@ if (isLocal) {
 	const normalizedPath = path
 		.normalize(path.join("../../", basePath, src))
 		.replace(/\\/g, "/");
-	const file = files[normalizedPath];
+	const file =
+		normalizedPath === profileAvatarPath
+			? async () => profileAvatar
+			: files[normalizedPath];
 	if (!file) {
 		throw new Error(
 			`Image file not found: ${normalizedPath.replace("../../", "src/")}`,

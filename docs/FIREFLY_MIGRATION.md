@@ -267,3 +267,11 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - TOC 保留最浅标题起算两级、原锚点/高亮/宽屏位置；初始化不再依赖可能错过的 animationend，改为容器替换后的帧回调。实例防重复初始化，断开时取消帧、断开观察器、对称移除 capture 点击监听并清空引用。
 - 生产浏览器：1440px/375px 搜索命中真实文章和 About，快速输入与清空正常、无横向溢出；三轮文章/About/Archive 客户端往返后 TOC 单实例、7 项及高亮恢复，搜索输入未重复，控制台无错误。1680px TOC 锚点及高亮通过；PhotoSwipe 打开、滚轮缩放、图片点击/按钮/Escape 关闭通过，未出现双灯箱。触屏双击采用原配置保留，未将桌面鼠标测试视作真实触屏手势全验。
 - 四项 `tests/navigation-interactions.test.mjs` 测试覆盖慢旧结果、清空、关闭/导航取消、超时后延迟就绪、load-error 恢复、搜索异常与五轮实例清理。定点 Biome 通过（Layout 保留既有格式，仅做 lint）；`pnpm check` 62 文件、0 errors/warnings/hints；`pnpm build` 原四页，Pagefind 两页/277 词，无本轮构建阻塞。内容、About、分类、Footer、封面规则及 URL 源文件无修改；SEO/RSS/robots/sitemap 整体验收与既有头像导入告警留下一部分。
+
+## Phase 1E.2 SEO、RSS、robots 与 sitemap（2026-09-08）
+
+- 保持 `site=https://www.anruix.com`、`trailingSlash=always` 及首页、About、Archive、文章页的既有 title/description/canonical、OG/Twitter 行为。无文章图时仍由当前头像生成本地分享图；真实文章的原远程封面继续作为大图分享图，`showCoverInPost=false` 只使正文无 `#post-cover`。ImageWrapper 对同一头像改用静态导入分支，Profile 与 SEO 继续复用原文件，同时消除 Vite 静态/动态重复导入告警。
+- BlogPosting 保留正确文章 URL、mainEntityOfPage、原封面、tags、作者“安锐”、published、可选 modified、`zh-CN` 及 `<` 转义，并将现有分类映射为标准 `articleSection=后期制作`。没有引入 Demo 身份或元数据。
+- RSS 保持 `/rss.xml`、站点 description、`zh-CN`、统一文章 URL、非法 XML 字符清理及 MarkdownIt/sanitize-html 管线；原正文和三张远程图片均在 feed。既有 directive 在 RSS 中仍以 `:::note` 标记呈现，这是迁移前管线行为，未在本阶段改写正文或切换渲染器。
+- robots 仍仅为 `User-agent: *`、`Allow: /` 和 www 域 sitemap；sitemap-index 仍指向 `sitemap-0.xml`，子 sitemap 仅含 `/`、`/about/`、`/archive/`、原文章 URL，无 Demo/搜索/分类等额外页面。分页大小仍为 8；当前单页不生成 `/1/` 或 `/2/`，后续页继续由 catch-all paginate 生成 `/{n}/`。
+- 三项生成产物测试覆盖四页 head、回退/文章分享图、JSON-LD、RSS、robots、sitemap、核心文件及分页边界。定点 Biome、`pnpm check` 62 文件与 `pnpm build` 通过；Pagefind 仍索引正式文章和 About 两页、277 词。生成四个 HTML 页面及原 RSS/robots/sitemap，无构建阻塞或新增公开 URL；内容、About、Footer、分类、备案和图片 URL 未修改。
