@@ -246,3 +246,10 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - 首页保持单列列表，不引入上游随机封面、网格/瀑布流切换、自动折叠、置顶/加密或 Demo 数据。卡片改用语义化 article，保留原布局、所有信息、标题/封面链接、封面 URL 和移动端既有标签显示规则；`showCoverInPost` 数据未改，详情逻辑仍留 1D。
 - Pagination 保持 `PAGE_SIZE=8`、第一页 `/`、后续 `/{n}/`、单页始终显示，并保留当前页及前后按钮的禁用/不可聚焦语义；补充有效前后页的 `rel`。未采用上游仅多页渲染或额外 PageJump。
 - 生产首页实测真实卡片含标题、2026-07-27、后期制作、三标签、原 description、670 字/3 分钟和原封面，标题/封面均指向 `/posts/lrc-raw-camera-color-match/`。1440px/375px 单列无溢出；单页页码 1 可见且两侧禁用。`pnpm check` 58 文件通过；`pnpm build` 生成原四页，Pagefind 索引两页、277 词。既有头像导入告警不属本轮阻塞。
+
+## Phase 1D.1 预声明分类与 showCoverInPost（2026-09-08）
+
+- `config/categories.ts` 是唯一预声明分类源，冻结固定顺序“拍摄技巧、后期制作、创作记录”。`getCategoryList` 只按正式文章累加这三个声明项的计数并保持顺序；Sidebar 移除局部数组，Archive 从同一源接收允许的分类。标签统计保持原动态逻辑。
+- 分类仍统一指向 `/archive/?category=...`。Archive 对 query 选中的声明分类执行原 OR 筛选；无结果时显示分类名、“暂无文章”和返回全部归档入口，不跳转或新增路由。生产实测 Sidebar 为 0/1/0，拍摄技巧和创作记录显示空状态，后期制作命中真实文章。
+- `shouldShowPostCover` 作为详情封面的唯一判断：有 image 且 `showCoverInPost !== false` 才显示普通详情封面并传递文章 banner 候选；分隔线使用同一判断。PostCard、正文图片及 socialImage/JSON-LD 继续独立读取原 image，Schema 的默认 true 未改。
+- 真实文章验证：首页卡片保留原封面与文章链接；详情无 `#post-cover` 或其他可见原封面，三张正文图完整；OG、Twitter 和 JSON-LD 仍含原封面 URL。1440px/375px 无溢出或 Demo 内容。定点 Biome 和四项 Node 测试通过；`pnpm check` 60 文件通过，`pnpm build` 原四页、Pagefind 两页/277 词；仅余既有头像导入告警，Footer 留 1D 下一部分。

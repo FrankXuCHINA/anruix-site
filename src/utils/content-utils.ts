@@ -1,7 +1,6 @@
 import { type CollectionEntry, getCollection } from "astro:content";
-import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
 import { getCategoryUrl, getPostSlug } from "@utils/url-utils.ts";
+import { CATEGORY_DEFINITIONS } from "@/config/categories";
 
 // // Retrieve posts and sort them by publication date
 async function getRawSortedPosts() {
@@ -82,33 +81,19 @@ export async function getCategoryList(): Promise<Category[]> {
 	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
 		return import.meta.env.PROD ? data.draft !== true : true;
 	});
-	const count: { [key: string]: number } = {};
+	const count = new Map(
+		CATEGORY_DEFINITIONS.map(({ name }) => [name as string, 0]),
+	);
 	allBlogPosts.forEach((post: { data: { category: string | null } }) => {
-		if (!post.data.category) {
-			const ucKey = i18n(I18nKey.uncategorized);
-			count[ucKey] = count[ucKey] ? count[ucKey] + 1 : 1;
-			return;
+		const categoryName = post.data.category?.trim();
+		if (categoryName && count.has(categoryName)) {
+			count.set(categoryName, (count.get(categoryName) ?? 0) + 1);
 		}
-
-		const categoryName =
-			typeof post.data.category === "string"
-				? post.data.category.trim()
-				: String(post.data.category).trim();
-
-		count[categoryName] = count[categoryName] ? count[categoryName] + 1 : 1;
 	});
 
-	const lst = Object.keys(count).sort((a, b) => {
-		return a.toLowerCase().localeCompare(b.toLowerCase());
-	});
-
-	const ret: Category[] = [];
-	for (const c of lst) {
-		ret.push({
-			name: c,
-			count: count[c],
-			url: getCategoryUrl(c),
-		});
-	}
-	return ret;
+	return CATEGORY_DEFINITIONS.map(({ name }) => ({
+		name,
+		count: count.get(name) ?? 0,
+		url: getCategoryUrl(name),
+	}));
 }

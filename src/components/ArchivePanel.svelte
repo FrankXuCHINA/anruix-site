@@ -3,11 +3,12 @@ import { onMount } from "svelte";
 
 import I18nKey from "../i18n/i18nKey";
 import { i18n } from "../i18n/translation";
-import { getPostUrlBySlug } from "../utils/url-utils";
+import { getPostUrlBySlug, url } from "../utils/url-utils";
 
 export let tags: string[] = [];
 export let categories: string[] = [];
 export let sortedPosts: Post[] = [];
+export let declaredCategories: readonly string[] = [];
 
 const params = new URLSearchParams(window.location.search);
 tags = params.has("tag") ? params.getAll("tag") : [];
@@ -30,6 +31,7 @@ interface Group {
 }
 
 let groups: Group[] = [];
+let filtersReady = false;
 
 function formatDate(date: Date) {
 	const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -53,8 +55,12 @@ onMount(async () => {
 	}
 
 	if (categories.length > 0) {
+		const selectedCategories = categories.filter((category) =>
+			declaredCategories.includes(category),
+		);
 		filteredPosts = filteredPosts.filter(
-			(post) => post.data.category && categories.includes(post.data.category),
+			(post) =>
+				post.data.category && selectedCategories.includes(post.data.category),
 		);
 	}
 
@@ -82,10 +88,20 @@ onMount(async () => {
 	groupedPostsArray.sort((a, b) => b.year - a.year);
 
 	groups = groupedPostsArray;
+	filtersReady = true;
 });
 </script>
 
 <div class="card-base px-8 py-6">
+    {#if filtersReady && groups.length === 0}
+        <div class="flex min-h-48 flex-col items-center justify-center gap-3 text-center" role="status">
+            {#if categories.length > 0}
+                <div class="font-bold text-xl text-75">{categories.join(" / ")}</div>
+            {/if}
+            <p class="text-50">暂无文章</p>
+            <a href={url("/archive/")} class="btn-regular rounded-lg px-4 py-2 font-medium active:scale-95">返回全部归档</a>
+        </div>
+    {/if}
     {#each groups as group}
         <div>
             <div class="flex flex-row w-full items-center h-[3.75rem]">
