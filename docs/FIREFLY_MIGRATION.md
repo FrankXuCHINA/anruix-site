@@ -224,3 +224,11 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - posts/spec 继续使用 `src/content.config.ts` 的 Astro 7 glob Content Layer；现有字段与默认值（含 `showCoverInPost=true`、draft、描述、图片、标签、分类、语言和前后篇字段）保持。文章与 About 源文件哈希均与 Phase 0 一致。
 - 移除 Phase 1A 伪造 `entry.slug`/`entry.render()` 的桥接，集合、分页与组件传递原生 `CollectionEntry`，统一使用 `render(entry)`。新增唯一的 `entry.id` 规范化入口，兼容斜杠及 `.md`/`.mdx` 后缀，再由同一 URL helper 生成 `/posts/{slug}/`。
 - 构建仍仅生成 `/`、`/about/`、`/archive/`、`/posts/lrc-raw-camera-color-match/` 四个 HTML 页面；单页情况下不生成 `/1/` 或 `/2/`。Archive 序列化数据保留全部文章字段，首页、RSS 与 sitemap 均引用原文章 URL。RSS 仅为原生 entry 类型做必要的一行 URL helper 适配，最终 RSS 验收仍属 1E。
+
+## Phase 1B.2 About 与 Markdown 渲染兼容（2026-09-08）
+
+- 按本轮授权完成原计划中的 About/Markdown 渲染部分。About 继续使用原生 `getEntry` / `render`，保留页面结构、站点描述和原文；显式固定现有 GFM / smartypants 设置，保留原插件顺序。
+- directive 标题改为合法的内联 HAST，不再把段落改成 div 嵌入 span 或修改输入树；保留中文、行内格式、原 admonition 类名和正文。新增两项 Node 回归测试（`node --test tests/admonition.test.mjs`），并移除 directive 插件未使用的文件参数。
+- 临时独立 Markdown 页面实测：五种 directive、中文格式化标题、重复 heading ID/锚点、sectionize、列表/硬换行/引用、行内与块级 KaTeX；代码换行、行号、折叠、语言徽标及复制完整内容/成功反馈通过。沿用既有 GitHub alert 类型映射，不新增 rehypeFigure 或 Fancybox；临时页面及夹具已移除。
+- 三张 Lightroom 图片保持原 URL 和 `p > img` 结构、405px/32rem/292px 最大宽度及原间距/圆角，无图注；正式文章与 About SHA-256 与基线一致。PhotoSwipe 与其他交互实现不变，反复导航、事件清理及最终灯箱/Search/TOC 验收仍留 1E。
+- 定点 Biome 检查及两项测试通过；`pnpm check` 56 文件、0 errors/warnings/hints；移除测试页面后 `pnpm build` 生成原四页，Pagefind 索引两页、277 词。无本轮阻塞；仍有既有头像静态/动态导入告警，未扩大资源/SEO 改动范围。

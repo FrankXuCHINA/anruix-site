@@ -106,6 +106,9 @@ export default defineConfig({
 	],
 	markdown: {
 		processor: unified({
+			// Preserve the existing Markdown dialect across theme upgrades.
+			gfm: true,
+			smartypants: true,
 			remarkPlugins: [
 				remarkMath,
 				remarkReadingTime,
