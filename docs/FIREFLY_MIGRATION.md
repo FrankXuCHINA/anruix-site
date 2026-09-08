@@ -232,3 +232,10 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - 临时独立 Markdown 页面实测：五种 directive、中文格式化标题、重复 heading ID/锚点、sectionize、列表/硬换行/引用、行内与块级 KaTeX；代码换行、行号、折叠、语言徽标及复制完整内容/成功反馈通过。沿用既有 GitHub alert 类型映射，不新增 rehypeFigure 或 Fancybox；临时页面及夹具已移除。
 - 三张 Lightroom 图片保持原 URL 和 `p > img` 结构、405px/32rem/292px 最大宽度及原间距/圆角，无图注；正式文章与 About SHA-256 与基线一致。PhotoSwipe 与其他交互实现不变，反复导航、事件清理及最终灯箱/Search/TOC 验收仍留 1E。
 - 定点 Biome 检查及两项测试通过；`pnpm check` 56 文件、0 errors/warnings/hints；移除测试页面后 `pnpm build` 生成原四页，Pagefind 索引两页、277 词。无本轮阻塞；仍有既有头像静态/动态导入告警，未扩大资源/SEO 改动范围。
+
+## Phase 1C.1 首页骨架、Navbar、Profile 与 Sidebar（2026-09-08）
+
+- 按固定 Firefly 快照的布局职责拆分，将 HeaderTopRow、Navbar、NavMenuPanel、SideBar 收敛到 `components/layout`；Navbar 与移动导航统一经 `resolveNavMenuLinks` 读取现有配置。仅保留主页、归档、关于，以及搜索、调色和亮/暗/跟随系统入口，未引入上游音乐、社交、壁纸、双侧栏、CategoryBar 或 Demo widget。
+- MainGrid 改为显式的移动单列和桌面 `17.5rem + 主内容` 两列：移动端顺序仍为主内容、Profile/分类 Sidebar、Footer，桌面维持单左栏。NavMenuPanel 移到布局根层，避免依赖 Navbar 内部定位；PostCard、Pagination 和 Footer 本体未改。
+- Profile 继续读取原配置和头像，保留“安锐”“念念不忘，必有回响”、`/about/`、hover 遮罩与按压反馈，并补充组件透传和头像可访问文本。分类组件原样保留，统一预声明源及最终计数仍属 1D。
+- 1440px 与 375px 生产页面冒烟无横向溢出；桌面左栏/主内容为 280px/872px，移动端顺序及三个导航正确，四个正式页面均有 Navbar/Sidebar/Profile 且无 Demo 文案。`pnpm check` 58 文件通过；`pnpm build` 生成原四页，Pagefind 索引两页、277 词。既有头像导入告警和最终导航交互清理留后续对应阶段。

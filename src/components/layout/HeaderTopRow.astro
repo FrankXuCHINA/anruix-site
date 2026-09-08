@@ -1,0 +1,21 @@
+---
+import Navbar from "./Navbar.astro";
+
+interface Props {
+	class?: string;
+}
+
+const className = Astro.props.class;
+---
+
+<header
+	id="top-row"
+	class:list={[
+		className,
+		"z-50 pointer-events-none relative transition-all duration-700 max-w-[var(--page-width)] px-0 md:px-4 mx-auto",
+	]}
+>
+	<div id="navbar-wrapper" class="pointer-events-auto sticky top-0 transition-all">
+		<Navbar />
+	</div>
+</header>

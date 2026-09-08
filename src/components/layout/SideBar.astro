@@ -1,7 +1,7 @@
 ---
 import type { MarkdownHeading } from "astro";
-import Categories from "./Categories.astro";
-import Profile from "./Profile.astro";
+import Categories from "../widget/Categories.astro";
+import Profile from "../widget/Profile.astro";
 
 interface Props {
 	class?: string;
@@ -10,11 +10,11 @@ interface Props {
 
 const className = Astro.props.class;
 ---
-<div id="sidebar" class:list={[className, "w-full"]}>
+<aside id="sidebar" aria-label="侧边栏" class:list={[className, "w-full"]}>
     <div class="flex flex-col w-full gap-4 mb-4">
         <Profile></Profile>
     </div>
     <div id="sidebar-sticky" class="transition-all duration-700 flex flex-col w-full gap-4 top-4 sticky top-4">
         <Categories class="onload-animation" style="animation-delay: 150ms"></Categories>
     </div>
-</div>
+</aside>
