@@ -239,3 +239,10 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - MainGrid 改为显式的移动单列和桌面 `17.5rem + 主内容` 两列：移动端顺序仍为主内容、Profile/分类 Sidebar、Footer，桌面维持单左栏。NavMenuPanel 移到布局根层，避免依赖 Navbar 内部定位；PostCard、Pagination 和 Footer 本体未改。
 - Profile 继续读取原配置和头像，保留“安锐”“念念不忘，必有回响”、`/about/`、hover 遮罩与按压反馈，并补充组件透传和头像可访问文本。分类组件原样保留，统一预声明源及最终计数仍属 1D。
 - 1440px 与 375px 生产页面冒烟无横向溢出；桌面左栏/主内容为 280px/872px，移动端顺序及三个导航正确，四个正式页面均有 Navbar/Sidebar/Profile 且无 Demo 文案。`pnpm check` 58 文件通过；`pnpm build` 生成原四页，Pagefind 索引两页、277 词。既有头像导入告警和最终导航交互清理留后续对应阶段。
+
+## Phase 1C.2 PostCard、文章列表与 Pagination（2026-09-08）
+
+- 按固定 Firefly 快照的职责分层，将 PostCard/PostPage 收敛到 `components/layout`，Pagination 收敛到 `components/common`。PostCard 直接从原生 Content Layer entry 派生标题、日期、分类、标签、description/摘要回退、阅读统计、封面及统一文章 URL，列表层不再重复传递字段。
+- 首页保持单列列表，不引入上游随机封面、网格/瀑布流切换、自动折叠、置顶/加密或 Demo 数据。卡片改用语义化 article，保留原布局、所有信息、标题/封面链接、封面 URL 和移动端既有标签显示规则；`showCoverInPost` 数据未改，详情逻辑仍留 1D。
+- Pagination 保持 `PAGE_SIZE=8`、第一页 `/`、后续 `/{n}/`、单页始终显示，并保留当前页及前后按钮的禁用/不可聚焦语义；补充有效前后页的 `rel`。未采用上游仅多页渲染或额外 PageJump。
+- 生产首页实测真实卡片含标题、2026-07-27、后期制作、三标签、原 description、670 字/3 分钟和原封面，标题/封面均指向 `/posts/lrc-raw-camera-color-match/`。1440px/375px 单列无溢出；单页页码 1 可见且两侧禁用。`pnpm check` 58 文件通过；`pnpm build` 生成原四页，Pagefind 索引两页、277 词。既有头像导入告警不属本轮阻塞。

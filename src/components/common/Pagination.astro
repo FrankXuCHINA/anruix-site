@@ -51,8 +51,8 @@ const getPageUrl = (p: number) => {
 };
 ---
 
-<nav aria-label="Pagination" class:list={[className, "flex flex-row gap-3 justify-center"]} style={style}>
-    <a href={page.url.prev} aria-label="Previous Page" aria-disabled={page.url.prev ? undefined : "true"} tabindex={page.url.prev ? undefined : -1}
+<nav aria-label="Pagination" class:list={[className, "pagination-wrapper flex flex-row gap-3 justify-center"]} style={style}>
+    <a href={page.url.prev} rel={page.url.prev ? "prev" : undefined} aria-label="Previous Page" aria-disabled={page.url.prev ? undefined : "true"} tabindex={page.url.prev ? undefined : -1}
        class:list={["btn-card overflow-hidden rounded-lg text-[var(--primary)] w-11 h-11",
            {"disabled": page.url.prev == undefined}
        ]}
@@ -74,7 +74,7 @@ const getPageUrl = (p: number) => {
             >{p}</a>
         })}
     </div>
-    <a href={page.url.next} aria-label="Next Page" aria-disabled={page.url.next ? undefined : "true"} tabindex={page.url.next ? undefined : -1}
+    <a href={page.url.next} rel={page.url.next ? "next" : undefined} aria-label="Next Page" aria-disabled={page.url.next ? undefined : "true"} tabindex={page.url.next ? undefined : -1}
        class:list={["btn-card overflow-hidden rounded-lg text-[var(--primary)] w-11 h-11",
            {"disabled": page.url.next == undefined}
        ]}
