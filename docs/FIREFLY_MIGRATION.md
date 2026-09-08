@@ -253,3 +253,9 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - 分类仍统一指向 `/archive/?category=...`。Archive 对 query 选中的声明分类执行原 OR 筛选；无结果时显示分类名、“暂无文章”和返回全部归档入口，不跳转或新增路由。生产实测 Sidebar 为 0/1/0，拍摄技巧和创作记录显示空状态，后期制作命中真实文章。
 - `shouldShowPostCover` 作为详情封面的唯一判断：有 image 且 `showCoverInPost !== false` 才显示普通详情封面并传递文章 banner 候选；分隔线使用同一判断。PostCard、正文图片及 socialImage/JSON-LD 继续独立读取原 image，Schema 的默认 true 未改。
 - 真实文章验证：首页卡片保留原封面与文章链接；详情无 `#post-cover` 或其他可见原封面，三张正文图完整；OG、Twitter 和 JSON-LD 仍含原封面 URL。1440px/375px 无溢出或 Demo 内容。定点 Biome 和四项 Node 测试通过；`pnpm check` 60 文件通过，`pnpm build` 原四页、Pagefind 两页/277 词；仅余既有头像导入告警，Footer 留 1D 下一部分。
+
+## Phase 1D.2 Footer 与备案信息（2026-09-08）
+
+- Footer 组件迁至 Firefly 的 `components/layout` 职责层，保留动态年份、“安锐的小站”和原响应式结构；技术署名更新为 Astro & Firefly。桌面/移动挂载点继续按断点互斥，以保持桌面 Footer 紧随主内容及移动端“主体、Sidebar、Footer”顺序，单一组件是备案结构与样式的唯一实现。
+- ICP/公安备案文字、`/icp.png`、`/gongan.png`、完整目标链接、`target="_blank"` 与 `rel="noopener noreferrer"` 均保留。1440px 下备案横排，375px 下版权与备案纵排、间距 10px；四个正式页面均只有一份可见 Footer，图标实测 14px，无横向溢出或 Demo Footer 内容。
+- `pnpm check` 60 文件、0 errors/warnings/hints；`pnpm build` 生成原四页，Pagefind 1.5.2 索引两页、277 词。仅余既有头像静态/动态导入告警，不属 Footer 阻塞；未触碰内容、分类、详情封面、URL 或 Phase 1E 功能。
