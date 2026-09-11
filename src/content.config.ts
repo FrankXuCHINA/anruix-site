@@ -15,6 +15,16 @@ const postsCollection = defineCollection({
 		tags: z.array(z.string()).optional().default([]),
 		category: z.string().optional().nullable().default(""),
 		lang: z.string().optional().default(""),
+		pinned: z.boolean().optional().default(false),
+		author: z.string().optional().default(""),
+		sourceLink: z.string().optional().default(""),
+		licenseName: z.string().optional().default(""),
+		licenseUrl: z.string().optional().default(""),
+		comment: z.boolean().optional().default(true),
+		password: z.string().optional().default(""),
+		passwordHint: z.string().optional().default(""),
+		series: z.string().optional().default(""),
+		seriesOrder: z.number().optional(),
 
 		/* For internal use */
 		prevTitle: z.string().default(""),

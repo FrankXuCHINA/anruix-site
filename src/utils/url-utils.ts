@@ -35,7 +35,7 @@ function joinUrl(...parts: string[]): string {
 
 export function getPostUrlBySlug(slug: string): string {
 	// 移除文件扩展名（如 .md, .mdx 等）
-	const slugWithoutExt = getPostSlug(slug);
+	const slugWithoutExt = removeFileExtension(slug);
 	return url(`/posts/${slugWithoutExt}/`);
 }
 
@@ -97,7 +97,10 @@ export function url(path: string): string {
 	return joinUrl("", import.meta.env.BASE_URL, path);
 }
 
-/** Existing published slugs; retained while post components migrate in F2. */
+/** Existing published slug compatibility for deferred RSS/archive consumers. */
 export function getPostSlug(entryId: string): string {
- return entryId.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").replace(/\.(?:md|mdx)$/i, "");
+	return entryId
+		.replace(/\\/g, "/")
+		.replace(/^\/+|\/+$/g, "")
+		.replace(/\.(?:md|mdx)$/i, "");
 }
