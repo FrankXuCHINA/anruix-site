@@ -7,7 +7,7 @@ import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import swup from "@swup/astro";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
-import { defineConfig } from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeComponents from "rehype-components"; /* Render the custom directive content */
 import rehypeKatex from "rehype-katex";
@@ -16,7 +16,9 @@ import remarkDirective from "remark-directive"; /* Handle directives */
 import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
-import { expressiveCodeConfig } from "./src/config.ts";
+import { fontConfig, fontsList } from "./src/config/fontConfig.ts";
+import { collectUsedFontCssVars } from "./src/utils/fontHelper.ts";
+const expressiveCodeConfig = { theme: "github-dark" }; // Existing Markdown pipeline; F2.
 import { pluginLanguageBadge } from "./src/plugins/expressive-code/language-badge.ts";
 import { AdmonitionComponent } from "./src/plugins/rehype-component-admonition.mjs";
 import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.mjs";
@@ -27,6 +29,41 @@ import { pluginCustomCopyButton } from "./src/plugins/expressive-code/custom-cop
 
 // https://astro.build/config
 export default defineConfig({
+	fonts: (() => {
+		// 禁用字体功能时直接返回空数组，跳过 Astro Font API 集成
+		if (!fontConfig.enable) return [];
+
+		const used = collectUsedFontCssVars(fontConfig);
+		return fontsList
+			.filter((f) => used.has(f.cssVariable))
+			.map((f) => {
+				let provider;
+				switch (f.provider) {
+					case "google":
+						provider = fontProviders.google();
+						break;
+					case "fontsource":
+						provider = fontProviders.fontsource();
+						break;
+					case "local":
+						provider = fontProviders.local();
+						break;
+					case "bunny":
+						provider = fontProviders.bunny();
+						break;
+					case "fontshare":
+						provider = fontProviders.fontshare();
+						break;
+					case "npm":
+						provider = fontProviders.npm();
+						break;
+					default:
+						provider = f.provider;
+				}
+				return { ...f, provider };
+			});
+	})(),
+
 	site: "https://www.anruix.com",
 	base: "/",
 	trailingSlash: "always",
@@ -40,8 +77,8 @@ export default defineConfig({
 			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
 			// the default value `transition-` cause transition delay
 			// when the Tailwind class `transition-all` is used
-			containers: ["main", "#toc"],
-			smoothScrolling: true,
+			containers: ["#banner-overlay-container", "#banner-dim-container", "#swup-container", "#left-sidebar-dynamic", "#right-sidebar-dynamic", "#toc"],
+			smoothScrolling: false,
 			cache: true,
 			preload: true,
 			accessibility: true,

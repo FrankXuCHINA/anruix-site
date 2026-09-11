@@ -1,3 +1,4 @@
+@reference "./main.css";
 .custom-md {
     h1 {
         @apply text-3xl;
@@ -28,7 +29,7 @@
         box-decoration-break: clone;
         -webkit-box-decoration-break: clone;
         display: inline-block;
-    
+
         &:hover, &:active {
             @apply decoration-transparent;
             background: var(--btn-plain-bg-hover);
@@ -123,7 +124,7 @@
         overflow-x: auto;
         margin: 1em 0;
     }
-    
+
 }
 
 /* Lightroom 教程截图：仅匹配本篇文章使用的三张图床图片 */

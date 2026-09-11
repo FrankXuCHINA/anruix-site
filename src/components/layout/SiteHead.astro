@@ -1,0 +1,53 @@
+---
+import { getImage } from "astro:assets";
+import defaultSocialImage from "../../assets/images/avatar.png";
+import { profileConfig, siteConfig } from "@/config";
+import { defaultFavicons, webManifest } from "@/constants/icon";
+import { url } from "@/utils/url-utils";
+interface Props { title?: string; description?: string; socialImage?: string; lang?: string; setOGTypeArticle?: boolean; }
+const { title, description, socialImage, lang = siteConfig.lang, setOGTypeArticle } = Astro.props;
+const pageTitle = title ? `${title} - ${siteConfig.title}` : siteConfig.subtitle ? `${siteConfig.title} - ${siteConfig.subtitle}` : siteConfig.title;
+const pageDescription = description || siteConfig.description;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site).href;
+const socialImageSource = socialImage || (await getImage({ src: defaultSocialImage, width: 600, format: "png" })).src;
+const socialImageURL = new URL(socialImageSource, Astro.site).href;
+const favicons = siteConfig.favicon.length ? siteConfig.favicon : defaultFavicons;
+---
+		<title>{pageTitle}</title>
+
+		<meta charset="UTF-8" />
+		<meta name="description" content={pageDescription}>
+		<meta name="author" content={profileConfig.name}>
+		<link rel="canonical" href={canonicalURL}>
+
+		<meta property="og:site_name" content={siteConfig.title}>
+		<meta property="og:url" content={canonicalURL}>
+		<meta property="og:title" content={pageTitle}>
+		<meta property="og:description" content={pageDescription}>
+		<meta property="og:locale" content={lang}>
+		<meta property="og:image" content={socialImageURL}>
+		<meta property="og:image:alt" content={title || siteConfig.title}>
+		{setOGTypeArticle ? (
+        <meta property="og:type" content="article" />
+        ) : (
+        <meta property="og:type" content="website" />
+        )}
+
+		<meta name="twitter:card" content={socialImage ? "summary_large_image" : "summary"}>
+		<meta name="twitter:url" content={canonicalURL}>
+		<meta name="twitter:title" content={pageTitle}>
+		<meta name="twitter:description" content={pageDescription}>
+		<meta name="twitter:image" content={socialImageURL}>
+		<meta name="twitter:image:alt" content={title || siteConfig.title}>
+
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="manifest" href={url(webManifest)} />
+		{favicons.map(favicon => (
+			<link rel={favicon.rel ?? "icon"}
+				  href={favicon.src.startsWith('/') ? url(favicon.src) : favicon.src}
+				  sizes={favicon.sizes}
+				  type={favicon.type}
+				  media={favicon.theme && `(prefers-color-scheme: ${favicon.theme})`}
+			/>
+		))}
