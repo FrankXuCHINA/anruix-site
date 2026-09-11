@@ -1,4 +1,92 @@
-# Firefly migration audit & plan
+# Firefly-first migration plan
+
+## 当前有效规则（2026-09-10 架构校正）
+
+本节及 cleanup 计划取代原 Phase 1/2 的实现保留规则。后附 Phase 0 与执行记录仅是历史事实，不能作为继续保留 Fuwari 内部代码、关闭 Firefly 功能或限制其布局的依据。原 Phase 2 继续暂停。
+
+- 唯一上游依据：[CuteLeaf/Firefly@db331cff041a1b264026fcee36930fab4d2485db][ff-root]，源码版本标记 6.16.7。沿用已锁定快照，不采用浮动 master，也不将其称为已核实的稳定发行版。
+- 审计起点为 `firefly-migration` 的 `aad5fdabf6aff7d216614b021bd9a781466f55e8`；此前 baseline `573b4044a4b5b4394d426f516d39804c7b5be19c`、规划 `1a848c62143837787c62a9be7dd8873fbd31308d` 已独立提交，不重复创建。
+- Firefly-first cleanup 第一阶段 F1 已完成并提交为 `de9173273d1f02e6053583696fb0790b542b7dfe`。原生配置、Layout/MainGridLayout、全局 CSS/字体、Navbar、Sidebar/Profile 及强耦合基础依赖已接入；`pnpm check`、`pnpm build`、Pagefind、375/1440px 布局和客户端导航验收通过。F2 及以后范围尚未开始。
+
+## Preservation contract
+
+1. **Firefly 是主题本体和默认行为来源。** Layout、组件、配置、CSS、Markdown、Search、TOC、灯箱、Swup、Wallpaper/Hero、waves、动效和主题设置优先直接采用上游原生实现。目录同名、移动文件、升级依赖不等于采用原生实现。
+2. 保留上游功能开关、布局、字体、效果和原生配置默认值。不因旧站没有功能而关闭；撤销旧单左栏/仅三导航/强制单列移动布局、每页八篇与单页强制分页、禁止 Zen 字体、只抽取 Hero 字效、额外页面全部关闭等约束。实际已存在的 URL 继续兼容；功能默认值与示例身份数据分别处理。
+3. 不导入 Demo 文章、头像、昵称、介绍、社交账号、分类、示例相册/友链/作者服务账号等内容数据。保留原生模块及配置接口；用本站已知值或空数据替换示例值，不杜撰身份、账号或内容。缺少真实媒体/服务配置时使用原生空数据状态，必要时记录最小空值适配，不能靠关功能或保留 Demo 填空。
+4. 保留站名“安锐的小站”、站点描述、`zh_CN`、`hue=250`、头像、昵称“安锐”、签名“念念不忘，必有回响”、头像到 `/about/`、favicon。文章和 About 原文、全部 Frontmatter、日期、标签、分类、描述、图片及图床 URL 不改写；Schema 不静默剥离用户字段。
+5. 保留单一预声明分类源及固定顺序“拍摄技巧、后期制作、创作记录”，文章只提供 count；零篇仍可见、可访问，标签仍动态。把扩展接入 Firefly 数据链，不保留另一套旧分类组件。
+6. `showCoverInPost` 默认 true；false 只限制详情可见封面，包括普通/叠加/文章 Banner，不限制卡片、正文图或 SEO 分享图。用上游封面处理链扩展，不维护平行封面系统。
+7. 保留本站备案/Footer 个性化及三张 Lightroom 截图专属尺寸样式。功能手势、内部 DOM、插件顺序、旧 CSS 和历史补丁不作为保留目标；原 Markdown 的内容含义及中文 directive 必须可读，优先由原生 pipeline 实现。
+8. 保留 `https://www.anruix.com`、尾斜杠、已公开 URL、本站 SEO 身份与分享图语义、RSS/robots/sitemap 入口及静态部署行为。以原生 SEO/RSS 实现承载，必要时最小兼容；不把“仅四页”作为限制原生功能的标准。
+9. 可访问性、搜索结果正确性、导航后清理等是验收结果，不指定旧 searchSequence、TOC capture、PhotoSwipe 或 page-lifecycle 的代码。先验证上游；仅针对复现的问题做最小修复。
+
+## Firefly mapping / 定向架构审计
+
+对照路径均相对于固定上游根目录；“沿用旧实现”不表示文件完全未修改。Firefly 自身共享的 Fuwari 历史代码不需要人为重写，判定标准是与锁定上游的差异及其理由。
+
+| 范围 / 当前路径 | 当前归属与证据 | 原生替换落点 / 处理 |
+| --- | --- | --- |
+| package / Astro / Content Layer | 已采用与上游一致的 Astro 7.2.10、Tailwind 4.3.3、Svelte 5 工具链；`content.config.ts` 的 glob、render 和 unified 是原生 API。仍保留旧集合字段和旧构建脚本；不能称完整 Firefly 技术架构。 | 对照上游 package、astro.config、content.config、构建脚本补齐真实依赖；用户字段作为扩展。 |
+| `src/config.ts`、`types/config.ts` | 仍是 Fuwari 集中配置；没有上游分拆配置能力。 | `config/index.ts` 与 site/sidebar/backgroundWallpaper/font/displaySettings 等配置及 types；默认值逐项对照。 |
+| `layouts/Layout.astro`、`MainGridLayout.astro` | 旧页面骨架、脚本、固定左栏和独立 TOC；HeaderTopRow 等职责拆分是局部对齐，不是原生整体替换。 | 同名上游 layouts、SidebarColumn、WallpaperSection、FloatingControls、原生工具函数及生命周期。 |
+| `layout/Navbar`、`NavMenuPanel`、`SideBar`、`widget/Profile` | 移动目录/统一菜单解析后仍保留旧 markup、控制逻辑；SideBar 只硬挂 Profile/Categories。 | 上游 Navbar/Profile 及按 sidebarLayoutConfig 组件映射渲染的 SideBar；恢复原生配置能力。 |
+| `layout/PostCard`、`PostPage`、`common/Pagination`、文章详情 | entry 数据接口已适配，主体仍旧卡片/详情和分页；原生 CoverImage/PostMeta/PostStats 与可配置布局未完整接入。 | 原生同名组件和 posts 路由，删除旧强制布局/分页显示约束；保留 URL 与用户封面字段。 |
+| `controls/Search.svelte`、Navbar 加载器 | 旧 Search 移目录，加 searchSequence/ready/error/timeout 和 onPageView；不是上游 Search。 | 上游 Search、navigation-utils、floating-panel-utils 及对应加载链；保留生产 Pagefind 与真实索引验收。 |
+| `widget/TOC.astro` | 仍旧 custom element、section 层级和监听代码。 | 上游 SidebarTOC 及其配套 TOC 工具/布局；不额外保留旧 TOC。 |
+| `features/PhotoSwipeManager.astro`、`utils/page-lifecycle.ts` | 从旧 Layout 抽出的 PhotoSwipe + 新自建生命周期包装，与旧 Layout hooks 共存，是明显混合层。 | 原生 FancyboxManager 与 Layout 生命周期；替换后删除 PhotoSwipe 管理器、专用 CSS/依赖及无调用的包装。 |
+| `astro.config.mjs`、Markdown/remark/rehype、Expressive Code | unified 是新 API，但实际插件链和自定义渲染仍旧；曾为旧 DOM 避开上游 figure/callout 默认处理。 | 原生 pipeline、`common/Markdown.astro`、callout/figure/代码配置；不全局禁用 figure 或强制旧代码主题/换行。 |
+| `styles/global.css`、`tailwind.config.cjs`、Stylus/旧 CSS | Tailwind 4 入口仍以 @config 桥接旧配置，并载入旧布局/PhotoSwipe 样式；是升级兼容层。 | 原生 CSS/变量/字体/响应式入口；待原生调用链接通后删除不再使用的旧桥接，不能仅按文件扩展名删上游仍使用的样式。 |
+| 分类、cover、Footer | `config/categories.ts`、count/空状态、post-cover-utils 和备案是真实用户需求，但当前挂在旧组件。 | 迁入原生分类/封面/Footer 扩展点，仅保留数据与最小必要逻辑。 |
+| Layout head、RSS/robots、SEO 测试 | 主要仍旧实现，最近补了字段/类型/资源兼容。 | 上游 SEO/RSS + 本站 URL/身份适配；保留用户语义测试，移除锁死旧 DOM、旧脚本或仅四页的断言。 |
+
+**结论：** 当前真正对齐的是工具链/API 和部分组件职责、目录、数据接口；本次对照的主要业务组件尚不能认定已完整采用 Firefly 原生实现。后附“已完成”记录仅说明旧阶段范围通过验收。
+
+## Compatibility gaps / 必须留下的最小扩展
+
+- **分类：** 沿用唯一 `src/config/categories.ts` 用户定义，接到上游 getCategoryList，按声明顺序输出 `{name,count,url}`。Sidebar、CategoryBar、分类索引、Archive 共用；count 使用原生正式文章筛选。`/archive/?category=…` 保持可达，空类显示分类名及“暂无文章”；真实计数 0/1/0。不要保留旧 Archive 只为复用组件。
+- **封面：** 上游 Schema/PostData 增加字段，原生 processedImage/enableInPost 判断再与 `showCoverInPost !== false` 合并，覆盖 overlay/Banner。原生全局开关默认值不被强制改写；分享图始终独立取 image。测试有无 image × 缺省/true/false。
+- **Footer：** 在原生 Footer/配置中恢复动态年份、“安锐的小站”、Astro & Firefly；ICP `苏ICP备2026009777号-1`、`/icp.png`、`https://beian.miit.gov.cn/#/Integrated/index`；公安 `苏公网安备 32059002007595号`、`/gongan.png`、`https://beian.mps.gov.cn/#/query/webSearch?code=32059002007595`。两链接 target=_blank、rel=noopener noreferrer；14px 图标，≤640px 纵排约10px间距，每视口仅一份可见。不保留旧双挂载策略作为要求。
+- **内容/Markdown：** posts/spec 原文与指纹保留；上游 callout 先验证 :::note[中文标题]、锚点、列表、硬换行、引用与 Math。若原生 figure 改 DOM，仅适配三张精确 URL 的样式（405px/32rem/292px），不全局恢复旧 Markdown；图注/代码块/灯箱默认行为随原生，正文及 URL 不改。
+- **URL/SEO：** 将现 getPostSlug/getPostUrlBySlug 需要的兼容收敛到原生 url-utils，不保留重复函数体系。核 `/posts/lrc-raw-camera-color-match/`、`/about/`、`/archive/`、`/`、`/{n}/` 规则及 RSS/robots/sitemap；核 canonical、本站作者、日期/语言、原图分享、JSON-LD 转义、RSS XML 清理。新增原生功能路径可保留，不能有 Demo 内容/身份进入索引。托管后台未核实，不导入上游部署 job 改变现有静态发布。
+- **默认值与数据：** 本次确认上游含移动 grid 默认、Wallpaper banner、显示设置 enable=false、Zen Banner 字体。这些不再按旧站规则覆盖。媒体/社交/外部服务中的示例数据须移除；允许功能所需的原生请求，不能使用作者示例账号。若原生组件不能处理空数据，记录并最小修复空状态，不暗改开关。
+
+## Firefly-first cleanup：执行顺序与阶段验收
+
+目标：仓库是固定 Firefly 的定制实例；每项上游差异均可归因于用户内容/配置、必要兼容或已复现缺陷。旧 Phase 2 不自动恢复。以下均为下一轮以后另行授权的源码工作，本轮不执行。
+
+| 步骤 | 执行范围 | 独立出口 |
+| --- | --- | --- |
+| F0：本轮架构校正 | 更新两份规则文档、差异清单；标记旧执行记录为历史。 | 仅两文档变化，分支/源码不变；不提交。 |
+| F1：原生架构与配置（已完成） | 已替换 config/types、Layout/MainGridLayout、原生 CSS/字体、Navbar/Sidebar/Profile 及强耦合基础依赖；保留配置能力/默认值并映射本站身份和头像。 | 提交 `de9173273d1f02e6053583696fb0790b542b7dfe`；原生调用链、无 Demo 身份、check/build/Pagefind、375/1440px 页面及导航验收通过。 |
+| F2：内容展示组件 | 原生 PostCard/PostPage/Pagination/详情/About/分类视图及 Markdown pipeline；保持用户原文，接入必要字段与 URL 适配。 | 正式文章/About 可读、原路由可达，原生响应式/默认分页生效；中文 note/Math/代码示例通过，无平行旧卡片/Markdown。 |
+| F3：原生交互系统 | 原生 Search/TOC/Fancybox/Swup、主题设置、返回顶部；连同依赖调用者替换旧管理器/包装。 | 生产搜索命中文章/About，快速输入/失败/清空正确；多次客户端往返无重复实例，TOC/灯箱/键盘可用；PhotoSwipe 与无用旧事件链已删除。 |
+| F4：用户扩展与发布契约收口 | 完成三分类、封面矩阵、Footer备案、三截图样式、SEO/RSS/robots/sitemap与身份空数据验证；逐项审查上游差异。 | 0/1/0、空类、分享图独立、备案两端布局、内容指纹/URL/SEO全部通过。旧内部实现专用测试换成用户结果测试；无多余兼容层。 |
+| F5：原生效果验证与视觉微调 | 架构稳定后验证已采用的原生 Hero/Wallpaper/waves/动效；只在另行授权下增加用户媒体/文案或视觉调整。 | 默认效果与原生配置一致，无 Demo 媒体/身份，减少动态偏好和移动端可用；不另造旧 Phase 2 平行 Hero。 |
+
+F1–F3 是依赖顺序，不是允许临时丢用户数据：每一步为保证现站可运行所必需的用户字段、URL、身份映射必须随原生替换一起接入；F4 做全量收口。强耦合组件按可构建单元替换，不留两个系统同时接管同一功能。若单步无法可运行，先调整该步边界并说明，不能借此整仓覆盖。
+
+### 迁移提交策略
+
+- 每轮开始查分支/status/diff，保留无关修改；不 reset/stash/整仓覆盖。已有 baseline 保留作内容证据，不恢复其整套实现。
+- F1 已独立完成；下一轮须另行授权后从 F2 开始。每个可构建单元独立验证，通过且获得明确授权后才本地提交；依赖与 lockfile 一起提交，精确暂存并查 cached diff，不用 git add .。
+- F2/F3 删除旧组件与迁移调用者同提交；删除依赖前查剩余引用。F4 的分类/封面/Footer扩展可拆独立提交。仅为旧实现服务的测试删除或重写，不以删用户契约断言使验证通过。
+- AGENTS.md 保持既有忽略策略，不强制提交；文档与源码范围区分。未经用户明确授权不得提交、推送或修改 main。
+
+## 最终回归清单
+
+- [ ] 上游 SHA 可追溯；核心组件/配置/生命周期与原生一致，每项差异有明确理由，目录迁移不冒充原生采用。
+- [ ] 功能/开关/字体/效果默认值对照原生，除明确用户覆盖外无擅自开关；无 Demo 身份、文章、账号、媒体或示例数据进入产物/索引。
+- [ ] 用户文章/About/Frontmatter/图片/头像/favicon/备案资源保持；站名、描述、语言、hue250正确。
+- [ ] 三分类唯一源、固定顺序、0/1/0与空态可达；标签动态；普通/overlay/Banner封面矩阵与SEO独立通过。
+- [ ] 两备案文本/图标/URL/属性及移动约10px间距正确，各视口无重复Footer；截图样式只作用于三张真实图片。
+- [ ] 原生Markdown可读现内容；生产Search/TOC/Fancybox/主题/Swup正确，无重复监听或旧系统并行；可访问性通过行为验证。
+- [ ] 原公开URL、canonical、RSS/robots/sitemap和本站SEO语义正确；新原生页面无Demo数据，静态部署契约不变。
+- [ ] ASTRO_TELEMETRY_DISABLED=1；适用格式检查、check/build/Pagefind及375/1440px、连续导航验证通过；跨工具链改动验冻结安装/CI。
+- [ ] 所有剩余旧兼容桥接均有必要性证据；授权/提交范围清楚，main和远端未改。
+
+## 历史证据（以下不是当前执行规则）
+
+以下保留原始审计与阶段验收记录供追溯；其中“必须保留旧实现”“禁用额外功能”“禁用字体”“仅三导航”等旧要求均已由本轮 Firefly-first 契约替代。历史通过的检查不证明原生替换已完成。
 
 ## 范围与证据
 
@@ -64,132 +152,6 @@ Frontmatter：title `LrC：RAW 自动匹配相机色彩`，published `2026-07-27
 - build=`astro build && pagefind --site dist`；check=Astro check；format 会写整个 src。`.github/workflows/build.yml` 针对 main push/PR、Node 22/24、冻结 lockfile、check 与完整 build；Biome CI 2.2.5，Action 锁 SHA。
 - `vercel.json` 为空，仓库无部署 job；README 仍写 Node 20+/pnpm 9+，与 CI 表述不完全一致。用户说明 GitHub 更新后托管流程自动发布；供应商后台、生产分支、Node/环境覆盖/重定向不能据这些文件确认，实施前只读核实并沿用，不导入上游 Pages workflow。
 
-## Preservation contract
-
-1. 以 Firefly 作技术/UI 底座，现站内容/信息架构为准：首页 Navbar、Profile、分类、列表/卡片、分页、Footer 全保留；不得被 Demo 覆盖。
-2. 品牌、头像、安锐、念念不忘，必有回响、About、favicon、默认 hue 250、Roboto/JetBrains 体系不变，Hero 也不使用 Zen Maru Gothic；保留调色器和旧 localStorage 偏好。
-3. 单一预声明源固定“拍摄技巧、后期制作、创作记录”的名称/顺序；零篇仍显示可访问；文章只提供计数，所有消费者共享源。
-4. 所有文章 URL、Frontmatter、日期、描述、标签、分类、图床地址和 Markdown 保留；新增技术默认字段不回写旧文章。
-5. showCoverInPost 默认 true，false 只隐藏详情可见封面及替代展示，不影响卡片、正文图或 SEO 图。
-6. 保留 TOC、搜索、明暗/系统模式、归档筛选、许可、阅读统计、前后篇、滚动/灯箱、专属样式与既有交互修复。
-7. Footer 的备案文字/图标/链接/移动布局完整保留；Powered by 后续可改 Astro & Firefly。
-8. 第一阶段不带入 Demo 文章、头像、分类、文案、社交数据、素材/视频；额外页面、非必要模块默认关闭，不改变导航结构。开源许可/技术署名不属 Demo 污染。
-9. Hero 封面、透明/毛玻璃 Navbar、动态标题、副标题打字机、水波纹仅作后续独立增强层，不能替换首页主体；Hero 只借用阴影/fade-in-up/打字机等文字效果，沿用原字体及真实文案。
-10. 原 URL、SEO 与静态部署不无故改变；保留未提交改动，未经用户明确授权不得提交、推送或修改 main，完成当前授权阶段即停止。
-
-## Firefly mapping
-
-下列上游路径固定在研究快照，依据包括 [package][ff-package]、[config][ff-config]、[Schema][ff-schema]、[pipeline][ff-astro]、[分类源][ff-content]、[详情封面][ff-post]、[Footer][ff-footer]。
-
-| 现站 → Firefly | 映射与首阶段取舍 |
-| --- | --- |
-| config.ts → `config/index.ts` + 分拆 Config / `types/*` | 分别恢复 site/profile/navbar/font/sidebar/cover/display 配置；不能只改品牌配置。默认 hue 165 改 250，site_url 恢复 www 域名。 |
-| Layout/MainGridLayout → 同名 layouts + `components/layout/*` | 使用新骨架，保持单左栏、原移动顺序；默认双栏/移动网格/额外 widget 关闭，TOC 单独映射。 |
-| Navbar/Profile → `layout/Navbar.astro`、`widget/Profile.astro` | 三导航与头像 About 交互保留；禁用 Demo 社交/音乐入口；保留调色能力，不开放无关布局/壁纸设置。 |
-| Categories → `widget/Categories.astro`、`layout/CategoryBar.astro`、`pages/categories/index.astro` | 三者均取 getCategoryList，适合统一适配；上游仍动态建类且按数量降序。CategoryBar 与独立分类索引首阶段默认关闭，今后启用仍共享源。 |
-| PostCard/PostPage → `layout/PostCard.astro` / `PostPage.astro` | 保持单列列表、摘要/元数据/阅读统计/封面；禁随机图、自动折叠与未授权网格切换。 |
-| Pagination → `common/Pagination.astro` + paginate | 上游默认每页 10，total>size 才渲染；须设 8 并保留单页分页和禁用按钮语义。 |
-| Schema/详情 → `src/content.config.ts` / `pages/posts/[...slug].astro` | glob Content Layer、render(entry)、id 代替旧 slug/entry.render；增加自定义字段并统一 URL 适配。 |
-| About/Markdown → 同名 about + `common/Markdown.astro` | posts/spec 路径可保留；上游 parseDirectiveNode 已将 :::note[标题] 转 callout，仍须验证中文标题/正文/样式。 |
-| Footer → `layout/Footer.astro` | 优先移植现完整结构/样式，仅换技术署名；FooterConfig.html 是额外注入区，不能单靠它保证现版权/备案顺序与布局。 |
-| Search/TOC/灯箱 → `controls/Search.svelte`、`widget/SidebarTOC.astro` 等、`features/FancyboxManager.astro` | Pagefind 可沿用但需验竞态/索引；Swup 容器和 TOC 初始化改变，Fancybox 不能直接假定 PhotoSwipe 手势等价。 |
-| Hero → `layout/BannerHomeTextOverlay.astro`、`features/TypewriterText.astro`、`styles/banner-title.css` / `transition.css` | 后续抽取字效；背景/Navbar 配置在 backgroundWallpaper.ts；common.waves 是波浪装饰，不等于已验证的交互扩散水纹。 |
-
-## Compatibility gaps / 明确方案
-
-### 分类源与空状态
-
-- 规划 `src/config/categories.ts` 导出只读 declaredCategories，仅定义三类名称/顺序；URL 统一经 getCategoryUrl。getCategoryList 遍历声明源填 `{name,count,url}`，无文章填 0；计数和列表共用生产 draft 过滤。
-- Sidebar、CategoryBar、分类索引（未来启用时）与归档分类标识/空状态共用此源；不重复数组、不按文章量排序。标签仍动态统计。
-- 第一阶段落点仍为 `/archive/?category=…`；空类显示分类名、“暂无文章”和回归档入口，不跳首页/404；没有创建独立分类 URL 的必要。
-- 空/未知 category 不自动扩展固定分类，也不改原文/丢文章；报告不一致并保留归档/uncategorized 兼容。当前真实文章无此异常。
-- 验收 0/1/0、全空、草稿计数、添加文章、空格/未知类别；直达/刷新/前进后退/Swup 均正确。独立测试夹具不进入正式内容和发布产物。
-
-### showCoverInPost
-
-- 上游 PostData 类型与 Schema 都缺字段；两处增加 boolean / `z.boolean().optional().default(true)`，同步数据传递类型，防止 Schema 剥离字段。
-- 当前上游 `showPostCover=Boolean(processedImage && coverImageConfig.enableInPost)`；规划加 `entry.data.showCoverInPost !== false`，兼容期全站 enableInPost=true、overlay 默认关闭。普通/叠加封面与无图分隔线共享此判断，文章 Banner 不得另显被隐藏封面。
-- 卡片仍取 image，OG/Twitter/JSON-LD 仍用原封面；首页 Hero 独立于文章封面。**不能断言整个详情 HTML 不含封面 URL**，应断言正文无 #post-cover/可见替代封面，head 中的分享图应存在。
-- 验收 image 有/无 × flag 缺省/true/false，分别检查卡片、普通/叠加封面、分隔线、Banner、SEO；真实文章卡片有封面，详情无封面，三张正文图仍在。
-
-### Footer / 备案
-
-- ICP：`苏ICP备2026009777号-1`、`/icp.png`、`https://beian.miit.gov.cn/#/Integrated/index`；公安：`苏公网安备 32059002007595号`、`/gongan.png`、`https://beian.mps.gov.cn/#/query/webSearch?code=32059002007595`。保留 alt、target=_blank、rel=noopener noreferrer。
-- 保留 14px 图标与偏移；≤640px 版权/备案纵排、10px 间距、隐藏原换行元素、图标偏移 -1px；桌面备案同行/按需换行。动态年份和“安锐的小站”不变，主题署名后续只换 Fuwari 为 Firefly 及链接。
-- 保留一份完整 Footer 实现，避免注入区重复；跨断点/Swup 只有一份可见，备案不被 Hero/sticky/overflow 遮挡。
-
-### About / Markdown / 交互
-
-- spec/about 原文与 getEntry/render 保留，About description 仍用现站描述，不能被上游默认“关于”覆盖。
-- 上游实际 processor 是 unified（不能据 satteri 依赖误判）；已有 :::note 转换桥接，验证中文标题、列表硬换行、引用、heading ID/section 与 TOC。无需批量转换 Markdown。
-- 上游 rehypeFigure 将有 alt 的 img 包成 center>figure 并加 figcaption，会破坏当前 p:has(>img)；第一阶段优先对现内容关闭转换。若必须适配，只改三张精确 URL 的选择器，保持尺寸/间距且不新增可见图注。
-- 上游代码默认 wrap=false、原生复制、双主题；保留现自动换行、github-dark、行号/折叠/徽标和复制反馈。Math/GitHub 卡片等用独立样例验收，避免只测唯一真实文章就宣称 pipeline 全兼容。
-- 初期保留 PhotoSwipe，或配置并验收 Fancybox 等价手势后替换，不同时绑定。Swup 各页面须有对应容器，TOC/搜索/灯箱监听器和计时器可清理，连续导航不重复初始化。
-- 旧 localStorage theme=auto 对应上游 system：首屏兼容读取旧值，保留 light/dark/hue，避免闪烁/失去系统跟随。上游 displaySettingsConfig.enable=false 与现 fixed=false 不等价，应恢复调色入口/重置，关闭非必要设置项。
-- 已有工作区修复纳入基线：searchSequence；ButtonLink 去 a/button 嵌套；禁用分页/空前后篇不可聚焦；关闭面板 invisible；重置禁用态；TOC 移除事件 capture 对称；ImageWrapper 的 Windows 路径、类型与缺图报错修复。
-
-### URL / SEO / 工具链 / 部署
-
-- 上游 entry.id 去扩展名，现用 entry.slug；实施前保存“源文件→生成 URL”，route/卡片/前后篇/归档/RSS/canonical/搜索共用适配。核对嵌套 index、自定义 slug、大小写/中文编码；当前真实 slug 必须逐字不变，不假定 id 天然等价。
-- 保留 www、尾斜杠、8 篇分页和分页 title。上游 RSS 直接拼 post.id，须统一函数；description 恢复站点 description，保留 language/XML 清洗。上游 AstroContainer 渲染 RSS 与旧 MarkdownIt 不同，单独核正文含义/图片/条目和构建成本。
-- 保留现 canonical、分享图回退、BlogPosting 语义与 JSON-LD `<` 转义；关闭自动 OG 生成，避免 `/og/*` 和图片变化；无专用图 Twitter 仍 summary，有专用封面才 summary_large_image。
-- 上游 robots 屏蔽 /_astro/ 与归档筛选，不能照搬；保持 Allow:/ 和 sitemap。query canonical 继续指向原归档。
-- 关闭 siteConfig.pages 的额外页面，核对 PUBLIC_PAGES_* 环境覆盖；隐藏导航不等于关闭路由，部分上游页面只是 redirect /404/。第一阶段不导入额外路由或从生成阶段排除；不完全受这些开关控制的 categories/tags/series/search/rss 展示页也默认不挂载。必要内部端点单独说明依赖，不进导航/sitemap。
-- 公告/音乐/标签云/动态/统计/日历/广告、评论/赞助/分享海报/推荐随机文章/沉浸阅读/过期提示/自动 OG、看板娘/樱花/分析脚本首阶段关闭；保留现更新日期。Hero/视频/轮播首阶段关闭，随机图 API 不调用。Demo 内容、作者社交和素材不导入。
-- 上游为 Astro 7.2.10、Tailwind 4.3.3、Svelte ^5.57.0、pnpm 11.22.0、Node≥22.23.0：跨主版本迁移，需验证 Content Layer、Tailwind 变量语法/config/CSS layer、字体 API、fa6→fa7 图标兼容，不能只换组件。
-- 上游 build 新增 GitHub 数据/LQIP/VNDB 封面/Pio 清理/字体子集/inline minify/Pagefind 脚本；逐项核实际依赖、网络与写入范围，避免 Demo 抓取/无关产物。禁 Zen 还须检查 Hero 字体覆盖和加载列表；优先沿用本地 Roboto/JetBrains 包。
-- 上游 astro.config 根据 CF_WORKERS 选 Cloudflare adapter，另有 [GitHub Pages workflow][ff-deploy]；不得整份导入而改变静态托管、部署分支、冻结 lockfile 或 Action 权限。实际托管后台为待核实项，未核实不调整部署。
-
-## 分阶段迁移计划与验收标准
-
-以下仅为计划；**本次修订完成后停止，不迁移源码、不提交、不推送**。Phase 1 按 1A → 1B → 1C → 1D → 1E 顺序执行，视觉增强仍为 Phase 2。正式开始 1A 前必须完成下述两个本地提交及干净工作区检查，相关提交须另获用户明确授权。
-
-### 正式迁移前置关口（不在本次执行）
-
-1. 核对审计记录的 23 个既有修改及其差异，仅将这些修改精确暂存，单独建立本地 **baseline commit**；不得混入迁移文档、迁移代码或其他新改动。记录 commit SHA，作为迁移前源码回退点。若与审计记录不一致，先查明归属，不能为凑齐 23 个文件覆盖现状。
-2. baseline 完成后，再单独提交 `docs/FIREFLY_MIGRATION.md`，形成 **迁移文档 commit**，记录 SHA。`AGENTS.md` 继续按既有策略本地忽略；未经额外授权不强制暂存、不改 `.gitignore`。
-3. 确认当前仍为 `firefly-migration`，两个提交顺序/范围正确，`git status --porcelain` 输出为空，`git diff` 和 `git diff --cached` 均为空，才允许开始 Phase 1。被既有规则忽略的 AGENTS/依赖/构建产物不算待提交项。
-4. 若存在其他已跟踪或未跟踪改动，先明确处理归属，不自动删除、重置、stash 或混入以上提交。**本地提交授权不等于推送或修改 main 的授权。**
-
-各阶段独立执行适用检查并记录结果，通过出口后才进入下一阶段；中间态沿用旧实现或最小兼容适配，不能用“后续阶段会修复”接受已知回归。
-
-| 阶段 | 工作 | 出口验收 |
-| --- | --- | --- |
-| 0：本次审计 | 精简 AGENTS、固化本文，不改源码。 | 文档完整；原 23 文件哈希/内容资源/分支/HEAD 不变；无提交推送。不声称运行时验收通过。 |
-| 1A：工具链/技术底座 | 先核实版本、锁上游 SHA，记录现构建/路由/head/截图/托管基线；迁移依赖、lockfile、Astro/Svelte/Tailwind 构建配置及必要最小兼容适配，暂沿用现内容/路由/UI。 | 前置两个提交与干净工作区已确认；冻结安装、适用格式检查、check/build/Pagefind 可复现；新工具链本地及 CI 配置相容，无 Demo/新增外部抓取/部署变更；内容和旧页面冒烟通过。既有失败单独登记，不接受新增失败。 |
-| 1B：内容与路由 | 迁移 Content Layer/Schema/render API 与统一 URL 适配；保留 posts/spec 原文、全部 Frontmatter（含 showCoverInPost）、文章 slug、归档 query、每页 8 篇和旧路径；保留现 UI。 | 内容/资源指纹与字段逐项一致；正式文章和 About 可渲染；全量 URL/分页/草稿过滤及归档筛选验证通过，RSS/搜索链接无漂移；check/build 通过，无新增公开页面。 |
-| 1C：现有 UI 主体 | 切换 Firefly 配置/layout/Navbar/Sidebar/Profile/PostCard/Pagination/Footer 挂载骨架，恢复品牌、hue/字体、三个导航与移动顺序；特殊组件先沿用现实现，额外页面/模块关闭。 | 各断点原首页模块全部存在，头像/身份/About 入口正确；单页分页仍显示、八篇分页不变；无 Demo/Zen/未授权模块；保留组件（含备案 Footer）可见且未退化，check/build 和页面冒烟通过。 |
-| 1D：特殊兼容 | 统一预声明分类源，落实零篇空状态、showCoverInPost 所有展示分支、完整备案 Footer、About/Markdown 扩展、三截图专属样式；替换兼容桥接时保持原行为。 | 0/1/0 与空类导航、封面矩阵/SEO 图独立性、备案链接/移动布局、About note/硬换行、独立 Markdown 样例和截图尺寸通过；原文/资源未变，check/build 通过。 |
-| 1E：交互与 SEO | 完成 Swup/TOC/搜索/灯箱/明暗及旧存储兼容、事件清理/可访问性；核对标题/描述/canonical/OG/Twitter/JSON-LD/RSS/sitemap/robots 与静态部署兼容。 | 生产 preview 搜索/连续输入/移动端、反复导航/历史记录、主题/焦点/灯箱手势通过；全量 URL/head/RSS/sitemap/robots 比对及 check/build/Pagefind 通过；无额外页面或 Demo 请求。Phase 1 全部保留契约成立后才可进入另行授权的 Phase 2。 |
-| 2：首页增强 | 另行授权后做 Hero 素材层、Navbar 透明/毛玻璃、动态标题/副标题字效、水波纹，各自开关/提交；区分背景波浪与点击扩散效果。 | 关闭增强恢复阶段 1；所有首页原模块仍可访问；明暗/手机/桌面可读，导航/搜索/TOC 无遮挡；减少动态效果时静态文字可读，Swup 不叠计时器。 |
-| 3：最终本地交付 | 全量回归，记录命令结果/截图/差异，准备精确 diff 和回退方案。 | 下列清单通过，夹具不入正式产物，变化均可解释；main/远端不动。合并发布另需明确授权，不自动执行。 |
-
-### 迁移提交策略
-
-- 本次不 commit。正式迁移的强制顺序：**23 个既有修改的本地 baseline commit → 独立迁移文档 commit → working tree 干净 → Phase 1A**，不能交换、合并或省略前置提交。
-- 后续按 1A 工具链 → 1B 内容/路由 → 1C UI 主体 → 1D 特殊兼容 → 1E 交互/SEO → Phase 2 视觉增强 → 最终验收拆分可回退提交。每个阶段可细分，强耦合变更在该阶段内合成可构建单元；提交均须明确授权，不跨阶段夹带功能。
-- 每次提交记录差异与检查结果，精确暂存、完整审查 staged diff；依赖与 lockfile 同提交。禁止 git add .，不提交上游快照、Demo、dist、临时夹具、原始配图、凭据。
-- AGENTS 维持本地忽略，本文必须在 baseline 之后的独立文档提交中追踪。回退优先逐提交 revert，不在混合工作区硬重置；Hero 各项另作可独立回退提交。
-
-## 最终回归清单
-
-- [ ] 正式迁移开始前已按顺序建立独立 baseline/迁移文档两个本地提交，记录 SHA 与空的 git status --porcelain；23 个既有修改未混入迁移提交，各阶段出口检查记录齐全。
-- [ ] 文章集合/Frontmatter/Markdown/日期/标签/分类/描述/四个图床 URL、About 原文一致；六个关键文件指纹核对。
-- [ ] Navbar、Profile、分类、列表/卡片、单页/多页分页、Footer 均在；仅三导航；头像 About hover/点击正常。
-- [ ] hue 250、原字体/代码斜体、调色与旧 light/dark/auto/hue 存储正常；无 Zen 字体请求或区域覆盖。
-- [ ] 三类固定顺序、0/1/0 计数可见；空类直达/刷新/空状态正常；筛选 OR/交集/uncategorized 兼容，无重复分类源。
-- [ ] flag/image 矩阵通过；真实文章卡片有封面、详情无可见封面、SEO 有原图；overlay/Banner 无绕过。
-- [ ] 三截图最大宽 405px/32rem/292px，原间距/圆角/边框/阴影；灯箱缩放/关闭/双击与图 URL 保持。
-- [ ] About note/列表硬换行/引用、文章 note/锚点/TOC；独立 Math/代码换行复制折叠行号/GitHub 卡片样例通过；无正文改写。
-- [ ] 生产 preview 搜索命中真实文章与 About；快速输入/清空/初始化延迟/失败兜底/移动端/Swup 往返正常，无 Demo 索引。
-- [ ] 年归档/日期/阅读统计/前后篇/许可/返回顶部/面板关闭/键盘焦点正常，反复导航不累积事件、灯箱、计时器。
-- [ ] 原 URL、分页大小 8/标题、description/canonical/OG/Twitter/JSON-LD 日期语言转义、RSS 语言正文链接、sitemap/robots 对比通过；无无故重定向或 www 变化。
-- [ ] 两备案文字、图标、完整目标 URL 与链接属性正确；≤640px 纵排/10px 间距，桌面/移动均只一份可见 Footer；可署名 Astro & Firefly。
-- [ ] 至少 375/640/768/1024/1440px 与 200% 缩放，亮/暗、刷新/客户端跳转均验；无遮挡/横向溢出/焦点陷阱。
-- [ ] 无 Demo 身份/内容/素材/额外页面/索引/外部请求；无随机封面、Demo 音乐视频或新增远程字体。
-- [ ] 若已授权 Hero：主体完整，真实文案与原字体不变，可降级/清理计时器，独立关闭不影响文章/导航。
-- [ ] 设置 ASTRO_TELEMETRY_DISABLED=1，完成适用只读格式检查、pnpm check、pnpm build、生产 preview/Pagefind；跨工具链阶段验冻结 lockfile/CI Node；如实记录失败，不以 dev 成功替代。
-- [ ] 托管平台/生产域名/部署分支触发/输出目录/环境语义不无故变化，无提交污染或未经明确授权的提交、推送、main 修改。
 
 [ff-root]: https://github.com/CuteLeaf/Firefly/tree/db331cff041a1b264026fcee36930fab4d2485db
 [ff-package]: https://github.com/CuteLeaf/Firefly/blob/db331cff041a1b264026fcee36930fab4d2485db/package.json
