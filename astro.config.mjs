@@ -1,6 +1,7 @@
 import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
 import { unified } from "@astrojs/markdown-remark";
+import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
@@ -8,24 +9,47 @@ import swup from "@swup/astro";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import { defineConfig, fontProviders } from "astro/config";
+import { pluginLanguageLogo } from "ec-lang-logo";
+import { pluginCollapsible } from "expressive-code-collapsible";
+import { pluginLanguageBadge } from "expressive-code-language-badge";
+import katex from "katex";
+import "katex/dist/contrib/mhchem.mjs";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeCallouts from "rehype-callouts";
+import rehypeCodeGroup from "rehype-code-group";
 import rehypeComponents from "rehype-components"; /* Render the custom directive content */
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
+import remarkAdmonitionToBlockquoteCallout from "remark-admonition-to-blockquote-callout";
 import remarkDirective from "remark-directive"; /* Handle directives */
-import remarkGithubAdmonitionsToDirectives from "remark-github-admonitions-to-directives";
 import remarkMath from "remark-math";
 import remarkSectionize from "remark-sectionize";
-import { fontConfig, fontsList } from "./src/config/fontConfig.ts";
+import {
+	expressiveCodeConfig,
+	fontConfig,
+	fontsList,
+	mermaidConfig,
+	plantumlConfig,
+	siteConfig,
+} from "./src/config/index.ts";
 import { collectUsedFontCssVars } from "./src/utils/fontHelper.ts";
-const expressiveCodeConfig = { theme: "github-dark" }; // Existing Markdown pipeline; F2.
-import { pluginLanguageBadge } from "./src/plugins/expressive-code/language-badge.ts";
-import { AdmonitionComponent } from "./src/plugins/rehype-component-admonition.mjs";
+import I18nKey from "./src/i18n/i18nKey.ts";
+import { i18n } from "./src/i18n/translation.ts";
 import { GithubCardComponent } from "./src/plugins/rehype-component-github-card.mjs";
+import { rehypeDiagramPanZoom } from "./src/plugins/rehype-diagram-panzoom.mjs";
+import rehypeEmailProtection from "./src/plugins/rehype-email-protection.mjs";
+import rehypeExternalLinks from "./src/plugins/rehype-external-links.mjs";
+import rehypeFigure from "./src/plugins/rehype-figure.mjs";
+import rehypeImageReferrerPolicy from "./src/plugins/rehype-image-referrerpolicy.mjs";
+import { rehypeMermaid } from "./src/plugins/rehype-mermaid.mjs";
+import { rehypePlantuml } from "./src/plugins/rehype-plantuml.mjs";
 import { parseDirectiveNode } from "./src/plugins/remark-directive-rehype.js";
 import { remarkExcerpt } from "./src/plugins/remark-excerpt.js";
+import { remarkImageGrid } from "./src/plugins/remark-image-grid.js";
+import { remarkMermaid } from "./src/plugins/remark-mermaid.js";
+import { remarkPlantuml } from "./src/plugins/remark-plantuml.js";
 import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
-import { pluginCustomCopyButton } from "./src/plugins/expressive-code/custom-copy-button.js";
+import { remarkWikiLink } from "./src/plugins/remark-wiki-link.js";
 
 // https://astro.build/config
 export default defineConfig({
@@ -68,41 +92,76 @@ export default defineConfig({
 	base: "/",
 	trailingSlash: "always",
 	output: "static",
+	image: {
+		layout: "none",
+	},
 	// Preserve whitespace around inline content across the compiler upgrade.
 	compressHTML: false,
-	vite: { plugins: [tailwindcss()] },
 	integrations: [
 		swup({
 			theme: false,
 			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
 			// the default value `transition-` cause transition delay
 			// when the Tailwind class `transition-all` is used
-			containers: ["#banner-overlay-container", "#banner-dim-container", "#swup-container", "#left-sidebar-dynamic", "#right-sidebar-dynamic", "#toc"],
+			containers: ["#banner-overlay-container", "#banner-dim-container", "#swup-container", "#left-sidebar-dynamic", "#right-sidebar-dynamic", "#floating-toc-wrapper"],
 			smoothScrolling: false,
 			cache: true,
-			preload: true,
+			preload: {
+				hover: true,
+				visible: true,
+			},
 			accessibility: true,
 			updateHead: true,
 			updateBodyClass: false,
 			globalInstance: true,
+			resolveUrl: (url) => url,
+			animateHistoryBrowsing: false,
+			skipPopStateHandling: (event) => event.state?.url?.includes("#"),
 		}),
 		icon({
 			include: {
+				"material-symbols": ["*"],
 				"fa6-brands": ["*"],
 				"fa6-regular": ["*"],
 				"fa6-solid": ["*"],
+				"fa7-brands": ["*"],
+				"fa7-regular": ["*"],
+				"fa7-solid": ["*"],
+				"simple-icons": ["*"],
+				mdi: ["*"],
+				mingcute: ["*"],
 			},
 		}),
 		expressiveCode({
-			themes: [expressiveCodeConfig.theme, expressiveCodeConfig.theme],
+			themes: [expressiveCodeConfig.darkTheme, expressiveCodeConfig.lightTheme],
+			useDarkModeMediaQuery: false,
+			themeCssSelector: (theme) => `[data-theme='${theme.name}']`,
 			plugins: [
+				...(expressiveCodeConfig.pluginLanguageBadge?.enable === true
+					? [pluginLanguageBadge()]
+					: []),
+				...(expressiveCodeConfig.pluginLanguageLogo?.enable === true
+					? [pluginLanguageLogo({
+						color: expressiveCodeConfig.pluginLanguageLogo.color ?? "mono",
+						excludedLangs: expressiveCodeConfig.pluginLanguageLogo.excludedLangs ?? [],
+					})]
+					: []),
 				pluginCollapsibleSections(),
 				pluginLineNumbers(),
-				pluginLanguageBadge(),
-				pluginCustomCopyButton(),
+				...(expressiveCodeConfig.pluginCollapsible?.enable === true
+					? [pluginCollapsible({
+						lineThreshold: expressiveCodeConfig.pluginCollapsible.lineThreshold || 15,
+						previewLines: expressiveCodeConfig.pluginCollapsible.previewLines || 8,
+						defaultCollapsed: expressiveCodeConfig.pluginCollapsible.defaultCollapsed ?? true,
+						expandButtonText: i18n(I18nKey.codeCollapsibleShowMore),
+						collapseButtonText: i18n(I18nKey.codeCollapsibleShowLess),
+						expandedAnnouncement: i18n(I18nKey.codeCollapsibleExpanded),
+						collapsedAnnouncement: i18n(I18nKey.codeCollapsibleCollapsed),
+					})]
+					: []),
 			],
 			defaultProps: {
-				wrap: true,
+				wrap: false,
 				overridesByLang: {
 					shellsession: {
 						showLineNumbers: false,
@@ -110,64 +169,69 @@ export default defineConfig({
 				},
 			},
 			styleOverrides: {
-				codeBackground: "var(--codeblock-bg)",
 				borderRadius: "0.75rem",
-				borderColor: "none",
 				codeFontSize: "0.875rem",
 				codeFontFamily:
-					"'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+					"var(--font-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace)",
 				codeLineHeight: "1.5rem",
-				frames: {
-					editorBackground: "var(--codeblock-bg)",
-					terminalBackground: "var(--codeblock-bg)",
-					terminalTitlebarBackground: "var(--codeblock-topbar-bg)",
-					editorTabBarBackground: "var(--codeblock-topbar-bg)",
-					editorActiveTabBackground: "none",
-					editorActiveTabIndicatorBottomColor: "var(--primary)",
-					editorActiveTabIndicatorTopColor: "none",
-					editorTabBarBorderBottomColor: "var(--codeblock-topbar-bg)",
-					terminalTitlebarBorderBottomColor: "none",
-				},
+				frames: {},
 				textMarkers: {
 					delHue: 0,
 					insHue: 180,
 					markHue: 250,
 				},
+				languageBadge: {
+					fontSize: "0.75rem",
+					fontWeight: "bold",
+					borderRadius: "0.25rem",
+					opacity: "1",
+					borderWidth: "0px",
+					borderColor: "transparent",
+				},
 			},
 			frames: {
-				showCopyToClipboardButton: false,
+				showCopyToClipboardButton: true,
 			},
 		}),
 		svelte(),
 		sitemap(),
+		mdx(),
 	],
+	// Firefly native Markdown and MDX pipeline.
 	markdown: {
 		processor: unified({
-			// Preserve the existing Markdown dialect across theme upgrades.
-			gfm: true,
-			smartypants: true,
 			remarkPlugins: [
+				...(siteConfig.post.rehypeCallouts.enablePythonMarkdownAdmonitions !== false
+					? [remarkAdmonitionToBlockquoteCallout]
+					: []),
 				remarkMath,
 				remarkReadingTime,
+				remarkWikiLink,
+				remarkImageGrid,
 				remarkExcerpt,
-				remarkGithubAdmonitionsToDirectives,
 				remarkDirective,
 				remarkSectionize,
 				parseDirectiveNode,
+				remarkMermaid,
+				[remarkPlantuml, plantumlConfig],
 			],
 			rehypePlugins: [
-				rehypeKatex,
+				[rehypeKatex, { katex }],
+				[rehypeCallouts, { theme: siteConfig.post.rehypeCallouts.theme }],
 				rehypeSlug,
+				rehypeCodeGroup,
+				[rehypeMermaid, mermaidConfig],
+				rehypePlantuml,
+				rehypeDiagramPanZoom,
+				rehypeFigure,
+				[rehypeImageReferrerPolicy, { domains: siteConfig.imageOptimization?.noReferrerDomains || [] }],
+				[rehypeExternalLinks, { siteUrl: siteConfig.site_url }],
+				[rehypeEmailProtection, { method: "base64" }],
 				[
 					rehypeComponents,
 					{
 						components: {
 							github: GithubCardComponent,
-							note: (x, y) => AdmonitionComponent(x, y, "note"),
-							tip: (x, y) => AdmonitionComponent(x, y, "tip"),
-							important: (x, y) => AdmonitionComponent(x, y, "important"),
-							caution: (x, y) => AdmonitionComponent(x, y, "caution"),
-							warning: (x, y) => AdmonitionComponent(x, y, "warning"),
 						},
 					},
 				],
@@ -196,5 +260,13 @@ export default defineConfig({
 				],
 			],
 		}),
+	},
+	vite: {
+		plugins: [tailwindcss()],
+		resolve: {
+			alias: {
+				"@rehype-callouts-theme": `rehype-callouts/theme/${siteConfig.post.rehypeCallouts.theme}`,
+			},
+		},
 	},
 });

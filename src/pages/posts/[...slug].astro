@@ -1,7 +1,7 @@
 ---
 import { render } from "astro:content";
 import License from "@components/misc/License.astro";
-import Markdown from "@components/misc/Markdown.astro";
+import Markdown from "@components/common/Markdown.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
@@ -167,7 +167,16 @@ const jsonLdString = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
                 <Content />
             </Markdown>
 
-            {licenseConfig.enable && <License title={entry.data.title} slug={getPostSlug(entry.id)} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
+            {licenseConfig.enable && <License
+                title={entry.data.title}
+                id={entry.id}
+                pubDate={entry.data.published}
+                author={entry.data.author}
+                sourceLink={entry.data.sourceLink}
+                licenseName={entry.data.licenseName}
+                licenseUrl={entry.data.licenseUrl}
+                class="mb-6 rounded-xl license-container onload-animation"
+            />}
 
         </div>
     </div>
