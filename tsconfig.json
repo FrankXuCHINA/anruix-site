@@ -2,6 +2,7 @@
 	"extends": "astro/tsconfigs/strict",
 	"compilerOptions": {
 		"strictNullChecks": true,
+		"noUncheckedSideEffectImports": false,
 		"allowJs": false,
 		"declaration": true,
 		"plugins": [

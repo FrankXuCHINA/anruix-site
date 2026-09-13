@@ -1,0 +1,38 @@
+<div class="anruix-filing">
+  <a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank" rel="noopener noreferrer">
+    <img src="/icp.png" alt="ICP备案" />
+    <span>苏ICP备2026009777号-1</span>
+  </a>
+  <a href="https://beian.mps.gov.cn/#/query/webSearch?code=32059002007595" target="_blank" rel="noopener noreferrer">
+    <img src="/gongan.png" alt="公安备案" />
+    <span>苏公网安备 32059002007595号</span>
+  </a>
+</div>
+
+<style>
+  .anruix-filing {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .anruix-filing a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .anruix-filing img {
+    width: auto;
+    height: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .anruix-filing {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+</style>
