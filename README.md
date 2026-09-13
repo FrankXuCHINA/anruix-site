@@ -21,7 +21,7 @@
 ## 🛠️ 技术栈
 
 - [Astro](https://astro.build/)
-- [Fuwari](https://github.com/saicaca/fuwari)
+- [Firefly](https://github.com/CuteLeaf/Firefly)
 - TypeScript
 - Tailwind CSS
 - Svelte
@@ -30,11 +30,11 @@
 - Markdown
 - pnpm
 
-站点采用静态生成，保留 Fuwari 的核心博客能力，并在其基础上进行了中文化、页面样式、导航、文章展示与交互等方面的个人定制。
+站点以 Firefly 为主题底座进行静态生成，并接入本站内容、身份、分类、备案和 URL 等个人配置。
 
 ## 🚀 本地运行
 
-环境需要 Node.js 20+ 与 pnpm 9+。
+环境需要 Node.js 22+ 与 pnpm 11+。
 
 ```bash
 pnpm install
@@ -59,15 +59,13 @@ pnpm check
 ```text
 src/content/posts/       博客文章
 src/content/spec/        关于等独立内容页
-src/config.ts            站点与个人信息配置
+src/config/              站点与个人信息配置
 public/                   静态资源
 ```
 
 ## 🙏 致谢
 
-本站基于 [saicaca/fuwari](https://github.com/saicaca/fuwari) 构建，并在原项目基础上进行个人化修改。
-
-感谢 Fuwari 与其相关开源项目的作者和贡献者。
+本站基于 [CuteLeaf/Firefly](https://github.com/CuteLeaf/Firefly) 构建并进行个人化配置。Firefly 基于 [Fuwari](https://github.com/saicaca/fuwari) 发展，相关作者版权见 [LICENSE](./LICENSE)。
 
 ## 📄 License
 

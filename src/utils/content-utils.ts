@@ -1,5 +1,5 @@
 import { type CollectionEntry, getCollection } from "astro:content";
-import { getCategoryUrl, getPostSlug } from "@utils/url-utils.ts";
+import { getCategoryUrl } from "@utils/url-utils.ts";
 import { CATEGORY_DEFINITIONS } from "@/config/categories";
 
 // // Retrieve posts and sort them by publication date
@@ -23,18 +23,18 @@ export async function getSortedPosts(): Promise<CollectionEntry<"posts">[]> {
 	const sorted = await getRawSortedPosts();
 
 	for (let i = 1; i < sorted.length; i++) {
-		sorted[i].data.nextSlug = getPostSlug(sorted[i - 1].id);
+		sorted[i].data.nextSlug = sorted[i - 1].id;
 		sorted[i].data.nextTitle = sorted[i - 1].data.title;
 	}
 	for (let i = 0; i < sorted.length - 1; i++) {
-		sorted[i].data.prevSlug = getPostSlug(sorted[i + 1].id);
+		sorted[i].data.prevSlug = sorted[i + 1].id;
 		sorted[i].data.prevTitle = sorted[i + 1].data.title;
 	}
 
 	return sorted;
 }
 export type PostForList = {
-	slug: string;
+	id: string;
 	data: CollectionEntry<"posts">["data"];
 };
 export async function getSortedPostsList(): Promise<PostForList[]> {
@@ -42,7 +42,7 @@ export async function getSortedPostsList(): Promise<PostForList[]> {
 
 	// delete post.body
 	const sortedPostsList = sortedFullPosts.map((post) => ({
-		slug: getPostSlug(post.id),
+		id: post.id,
 		data: post.data,
 	}));
 

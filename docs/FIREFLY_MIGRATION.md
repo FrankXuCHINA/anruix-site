@@ -6,7 +6,7 @@
 
 - 唯一上游依据：[CuteLeaf/Firefly@db331cff041a1b264026fcee36930fab4d2485db][ff-root]，源码版本标记 6.16.7。沿用已锁定快照，不采用浮动 master，也不将其称为已核实的稳定发行版。
 - 审计起点为 `firefly-migration` 的 `aad5fdabf6aff7d216614b021bd9a781466f55e8`；此前 baseline `573b4044a4b5b4394d426f516d39804c7b5be19c`、规划 `1a848c62143837787c62a9be7dd8873fbd31308d` 已独立提交，不重复创建。
-- Firefly-first cleanup 第一阶段 F1 已完成并提交为 `de9173273d1f02e6053583696fb0790b542b7dfe`。原生配置、Layout/MainGridLayout、全局 CSS/字体、Navbar、Sidebar/Profile 及强耦合基础依赖已接入；`pnpm check`、`pnpm build`、Pagefind、375/1440px 布局和客户端导航验收通过。F2 及以后范围尚未开始。
+- Firefly-first cleanup F1–F4 已依次完成：原生架构与导航 `de9173273d1f02e6053583696fb0790b542b7dfe`、内容展示 `b23416595e25f3f582427bf8be16ca1fcab19048`、内容交互 `9c085a347a751eef3f5d41dd51f657f41adae75d`、Footer 与发布栈 `bb5539e75570c9769052f7f4bd85585d4687bde0`。最终残留清理也已完成：Archive/Categories 接回原生组件链，旧重复组件、Demo 媒体、过期测试与无调用依赖已删除；check/build/Pagefind、用户契约测试及 375/1440px 浏览器回归通过。原 Phase 2 仍未启动。
 
 ## Preservation contract
 
@@ -20,7 +20,7 @@
 8. 保留 `https://www.anruix.com`、尾斜杠、已公开 URL、本站 SEO 身份与分享图语义、RSS/robots/sitemap 入口及静态部署行为。以原生 SEO/RSS 实现承载，必要时最小兼容；不把“仅四页”作为限制原生功能的标准。
 9. 可访问性、搜索结果正确性、导航后清理等是验收结果，不指定旧 searchSequence、TOC capture、PhotoSwipe 或 page-lifecycle 的代码。先验证上游；仅针对复现的问题做最小修复。
 
-## Firefly mapping / 定向架构审计
+## Firefly mapping / cleanup 前定向架构审计（历史）
 
 对照路径均相对于固定上游根目录；“沿用旧实现”不表示文件完全未修改。Firefly 自身共享的 Fuwari 历史代码不需要人为重写，判定标准是与锁定上游的差异及其理由。
 
@@ -39,7 +39,7 @@
 | 分类、cover、Footer | `config/categories.ts`、count/空状态、post-cover-utils 和备案是真实用户需求，但当前挂在旧组件。 | 迁入原生分类/封面/Footer 扩展点，仅保留数据与最小必要逻辑。 |
 | Layout head、RSS/robots、SEO 测试 | 主要仍旧实现，最近补了字段/类型/资源兼容。 | 上游 SEO/RSS + 本站 URL/身份适配；保留用户语义测试，移除锁死旧 DOM、旧脚本或仅四页的断言。 |
 
-**结论：** 当前真正对齐的是工具链/API 和部分组件职责、目录、数据接口；本次对照的主要业务组件尚不能认定已完整采用 Firefly 原生实现。后附“已完成”记录仅说明旧阶段范围通过验收。
+**当时结论：** cleanup 开始前仅工具链/API 和部分组件职责、目录、数据接口完成对齐，主要业务组件仍是混合实现。该表用于解释 F1–F4 的替换起点，不代表当前源码状态。
 
 ## Compatibility gaps / 必须留下的最小扩展
 
@@ -47,7 +47,7 @@
 - **封面：** 上游 Schema/PostData 增加字段，原生 processedImage/enableInPost 判断再与 `showCoverInPost !== false` 合并，覆盖 overlay/Banner。原生全局开关默认值不被强制改写；分享图始终独立取 image。测试有无 image × 缺省/true/false。
 - **Footer：** 在原生 Footer/配置中恢复动态年份、“安锐的小站”、Astro & Firefly；ICP `苏ICP备2026009777号-1`、`/icp.png`、`https://beian.miit.gov.cn/#/Integrated/index`；公安 `苏公网安备 32059002007595号`、`/gongan.png`、`https://beian.mps.gov.cn/#/query/webSearch?code=32059002007595`。两链接 target=_blank、rel=noopener noreferrer；14px 图标，≤640px 纵排约10px间距，每视口仅一份可见。不保留旧双挂载策略作为要求。
 - **内容/Markdown：** posts/spec 原文与指纹保留；上游 callout 先验证 :::note[中文标题]、锚点、列表、硬换行、引用与 Math。若原生 figure 改 DOM，仅适配三张精确 URL 的样式（405px/32rem/292px），不全局恢复旧 Markdown；图注/代码块/灯箱默认行为随原生，正文及 URL 不改。
-- **URL/SEO：** 将现 getPostSlug/getPostUrlBySlug 需要的兼容收敛到原生 url-utils，不保留重复函数体系。核 `/posts/lrc-raw-camera-color-match/`、`/about/`、`/archive/`、`/`、`/{n}/` 规则及 RSS/robots/sitemap；核 canonical、本站作者、日期/语言、原图分享、JSON-LD 转义、RSS XML 清理。新增原生功能路径可保留，不能有 Demo 内容/身份进入索引。托管后台未核实，不导入上游部署 job 改变现有静态发布。
+- **URL/SEO：** 文章 ID 统一由原生 `removeFileExtension` / `getPostUrlBySlug` 处理，重复 `getPostSlug` 桥接已移除。核 `/posts/lrc-raw-camera-color-match/`、`/about/`、`/archive/`、`/`、`/{n}/` 规则及 RSS/robots/sitemap；核 canonical、本站作者、日期/语言、原图分享、JSON-LD 转义、RSS XML 清理。新增原生功能路径可保留，不能有 Demo 内容/身份进入索引。托管后台未核实，不导入上游部署 job 改变现有静态发布。
 - **默认值与数据：** 本次确认上游含移动 grid 默认、Wallpaper banner、显示设置 enable=false、Zen Banner 字体。这些不再按旧站规则覆盖。媒体/社交/外部服务中的示例数据须移除；允许功能所需的原生请求，不能使用作者示例账号。若原生组件不能处理空数据，记录并最小修复空状态，不暗改开关。
 
 ## Firefly-first cleanup：执行顺序与阶段验收
@@ -58,9 +58,9 @@
 | --- | --- | --- |
 | F0：本轮架构校正 | 更新两份规则文档、差异清单；标记旧执行记录为历史。 | 仅两文档变化，分支/源码不变；不提交。 |
 | F1：原生架构与配置（已完成） | 已替换 config/types、Layout/MainGridLayout、原生 CSS/字体、Navbar/Sidebar/Profile 及强耦合基础依赖；保留配置能力/默认值并映射本站身份和头像。 | 提交 `de9173273d1f02e6053583696fb0790b542b7dfe`；原生调用链、无 Demo 身份、check/build/Pagefind、375/1440px 页面及导航验收通过。 |
-| F2：内容展示组件 | 原生 PostCard/PostPage/Pagination/详情/About/分类视图及 Markdown pipeline；保持用户原文，接入必要字段与 URL 适配。 | 正式文章/About 可读、原路由可达，原生响应式/默认分页生效；中文 note/Math/代码示例通过，无平行旧卡片/Markdown。 |
-| F3：原生交互系统 | 原生 Search/TOC/Fancybox/Swup、主题设置、返回顶部；连同依赖调用者替换旧管理器/包装。 | 生产搜索命中文章/About，快速输入/失败/清空正确；多次客户端往返无重复实例，TOC/灯箱/键盘可用；PhotoSwipe 与无用旧事件链已删除。 |
-| F4：用户扩展与发布契约收口 | 完成三分类、封面矩阵、Footer备案、三截图样式、SEO/RSS/robots/sitemap与身份空数据验证；逐项审查上游差异。 | 0/1/0、空类、分享图独立、备案两端布局、内容指纹/URL/SEO全部通过。旧内部实现专用测试换成用户结果测试；无多余兼容层。 |
+| F2：内容展示组件（已完成） | 已采用原生 PostCard/PostPage/Pagination/详情承载层，并接入真实内容、URL 与 `showCoverInPost`。 | 提交 `b23416595e25f3f582427bf8be16ca1fcab19048`；文章/About 可读、原路由与原生响应式通过。 |
+| F3：原生交互系统（已完成） | 已采用原生 Markdown、License、Search、SidebarTOC、Fancybox 与 Layout 生命周期，移除旧 PhotoSwipe/事件包装。 | 提交 `9c085a347a751eef3f5d41dd51f657f41adae75d`；Pagefind、中文 note、TOC、灯箱及连续导航通过。 |
+| F4：用户扩展与发布契约收口（已完成） | 已采用原生 Footer 与 SEO/RSS/robots/sitemap 发布栈，并接入备案、本站身份、三分类和封面扩展。 | 提交 `bb5539e75570c9769052f7f4bd85585d4687bde0`；备案布局、公开 URL、分享元数据与索引产物通过。 |
 | F5：原生效果验证与视觉微调 | 架构稳定后验证已采用的原生 Hero/Wallpaper/waves/动效；只在另行授权下增加用户媒体/文案或视觉调整。 | 默认效果与原生配置一致，无 Demo 媒体/身份，减少动态偏好和移动端可用；不另造旧 Phase 2 平行 Hero。 |
 
 F1–F3 是依赖顺序，不是允许临时丢用户数据：每一步为保证现站可运行所必需的用户字段、URL、身份映射必须随原生替换一起接入；F4 做全量收口。强耦合组件按可构建单元替换，不留两个系统同时接管同一功能。若单步无法可运行，先调整该步边界并说明，不能借此整仓覆盖。
@@ -68,21 +68,21 @@ F1–F3 是依赖顺序，不是允许临时丢用户数据：每一步为保证
 ### 迁移提交策略
 
 - 每轮开始查分支/status/diff，保留无关修改；不 reset/stash/整仓覆盖。已有 baseline 保留作内容证据，不恢复其整套实现。
-- F1 已独立完成；下一轮须另行授权后从 F2 开始。每个可构建单元独立验证，通过且获得明确授权后才本地提交；依赖与 lockfile 一起提交，精确暂存并查 cached diff，不用 git add .。
+- F1–F4 与最终残留清理均已完成；无调用旧文件、旧依赖和临时桥接已删除，锁定旧实现细节的测试已改为用户可见结果测试。依赖与 lockfile 同步，提交继续精确暂存并检查 cached diff，不用 git add .。
 - F2/F3 删除旧组件与迁移调用者同提交；删除依赖前查剩余引用。F4 的分类/封面/Footer扩展可拆独立提交。仅为旧实现服务的测试删除或重写，不以删用户契约断言使验证通过。
 - AGENTS.md 保持既有忽略策略，不强制提交；文档与源码范围区分。未经用户明确授权不得提交、推送或修改 main。
 
 ## 最终回归清单
 
-- [ ] 上游 SHA 可追溯；核心组件/配置/生命周期与原生一致，每项差异有明确理由，目录迁移不冒充原生采用。
-- [ ] 功能/开关/字体/效果默认值对照原生，除明确用户覆盖外无擅自开关；无 Demo 身份、文章、账号、媒体或示例数据进入产物/索引。
-- [ ] 用户文章/About/Frontmatter/图片/头像/favicon/备案资源保持；站名、描述、语言、hue250正确。
-- [ ] 三分类唯一源、固定顺序、0/1/0与空态可达；标签动态；普通/overlay/Banner封面矩阵与SEO独立通过。
-- [ ] 两备案文本/图标/URL/属性及移动约10px间距正确，各视口无重复Footer；截图样式只作用于三张真实图片。
-- [ ] 原生Markdown可读现内容；生产Search/TOC/Fancybox/主题/Swup正确，无重复监听或旧系统并行；可访问性通过行为验证。
-- [ ] 原公开URL、canonical、RSS/robots/sitemap和本站SEO语义正确；新原生页面无Demo数据，静态部署契约不变。
-- [ ] ASTRO_TELEMETRY_DISABLED=1；适用格式检查、check/build/Pagefind及375/1440px、连续导航验证通过；跨工具链改动验冻结安装/CI。
-- [ ] 所有剩余旧兼容桥接均有必要性证据；授权/提交范围清楚，main和远端未改。
+- [x] 上游 SHA 可追溯；核心组件/配置/生命周期与原生一致，每项差异有明确理由，目录迁移不冒充原生采用。
+- [x] 功能/开关/字体/效果默认值对照原生，除明确用户覆盖外无擅自开关；无 Demo 身份、文章、账号、媒体或示例数据进入产物/索引。
+- [x] 用户文章/About/Frontmatter/图片/头像/favicon/备案资源保持；站名、描述、语言、hue250正确。
+- [x] 三分类唯一源、固定顺序、0/1/0与空态可达；标签动态；普通/overlay/Banner封面矩阵与SEO独立通过。
+- [x] 两备案文本/图标/URL/属性及移动约10px间距正确，各视口无重复Footer；截图样式只作用于三张真实图片。
+- [x] 原生Markdown可读现内容；生产Search/TOC/Fancybox/主题/Swup正确，无重复监听或旧系统并行；可访问性通过行为验证。
+- [x] 原公开URL、canonical、RSS/robots/sitemap和本站SEO语义正确；新原生页面无Demo数据，静态部署契约不变。
+- [x] ASTRO_TELEMETRY_DISABLED=1；适用格式检查、check/build/Pagefind及375/1440px、连续导航验证通过；跨工具链改动验冻结安装。
+- [x] 所有剩余旧兼容桥接均有必要性证据；授权/提交范围清楚，main和远端未改。
 
 ## 历史证据（以下不是当前执行规则）
 

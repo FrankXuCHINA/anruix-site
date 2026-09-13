@@ -96,11 +96,3 @@ export function url(path: string): string {
 	// 只有本地相对路径才添加BASE_URL
 	return joinUrl("", import.meta.env.BASE_URL, path);
 }
-
-/** Existing published slug compatibility for deferred RSS/archive consumers. */
-export function getPostSlug(entryId: string): string {
-	return entryId
-		.replace(/\\/g, "/")
-		.replace(/^\/+|\/+$/g, "")
-		.replace(/\.(?:md|mdx)$/i, "");
-}
