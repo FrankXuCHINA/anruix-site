@@ -258,9 +258,22 @@ export function getStoredTheme(): LIGHT_DARK_MODE {
 	) {
 		return getDefaultTheme();
 	}
-	return (
-		(localStorage.getItem("theme") as LIGHT_DARK_MODE) || getDefaultTheme()
-	);
+	const storedTheme = localStorage.getItem("theme");
+	if (storedTheme === "auto") {
+		localStorage.setItem("theme", SYSTEM_MODE);
+		return SYSTEM_MODE;
+	}
+	if (
+		storedTheme === LIGHT_MODE ||
+		storedTheme === DARK_MODE ||
+		storedTheme === SYSTEM_MODE
+	) {
+		return storedTheme;
+	}
+	if (storedTheme !== null) {
+		localStorage.removeItem("theme");
+	}
+	return getDefaultTheme();
 }
 
 // 初始化主题监听器（用于页面加载后）
