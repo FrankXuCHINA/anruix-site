@@ -2,6 +2,7 @@
 import { render } from "astro:content";
 import License from "@components/misc/License.astro";
 import Markdown from "@components/common/Markdown.astro";
+import SharePoster from "@/components/misc/SharePoster.svelte";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
@@ -11,12 +12,14 @@ import {
 	getFileDirFromPath,
 	getPostUrlBySlug,
 	removeFileExtension,
+	url,
 } from "@utils/url-utils";
 import { Icon } from "astro-icon/components";
 import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
-import { coverImageConfig, licenseConfig } from "@/config";
+import { coverImageConfig, licenseConfig, sponsorConfig } from "@/config";
 import { profileConfig, siteConfig } from "../../config";
+import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import {
 	getApiUrlList,
 	processCoverImageSync,
@@ -32,6 +35,10 @@ import {
 	buildPublisherEntity,
 	toAbsoluteUrl,
 } from "@/utils/schema-utils";
+
+const showSponsorButton =
+	sponsorConfig.showButtonInPost && siteConfig.pages.sponsor;
+const showPostActionCard = siteConfig.post.share || showSponsorButton;
 
 export async function getStaticPaths() {
 	const blogEntries = await getSortedPosts();
@@ -56,6 +63,26 @@ const showPostCover = Boolean(
 );
 const usePostCoverOverlay =
 	showPostCover && (coverImageConfig.enableInPostOverlay ?? true);
+const getDirectImageUrl = (src: string | undefined): string | null => {
+	if (!src) return null;
+	if (
+		src.startsWith("http://") ||
+		src.startsWith("https://") ||
+		src.startsWith("//") ||
+		src.startsWith("data:")
+	) {
+		return src;
+	}
+	return src.startsWith("/") ? url(src) : null;
+};
+
+// Reuse optimized page images for the native sharing poster when visible.
+const posterCoverUrl = showPostCover ? null : getDirectImageUrl(processedImage);
+const posterCoverSelector = showPostCover ? "#post-cover img" : null;
+const posterAvatarUrl = getDirectImageUrl(profileConfig.avatar);
+const posterAvatarSelector = profileConfig.avatar
+	? ".profile-avatar-image img"
+	: null;
 const bannerPostMeta = {
 	title: entry.data.title,
 	description: entry.data.description,
@@ -223,6 +250,51 @@ const jsonLd = {
             <Markdown class="mb-6 markdown-content onload-animation">
                 <Content />
             </Markdown>
+
+            {showPostActionCard && (
+                <div class="mb-6 rounded-xl onload-animation">
+                    <div class="p-6 bg-(--license-block-bg) rounded-xl">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="flex items-center gap-3 flex-1">
+                                <div class="h-12 w-12 rounded-lg bg-(--primary) flex items-center justify-center text-white dark:text-black/70 shrink-0">
+                                    <Icon name={showSponsorButton ? "material-symbols:favorite" : "material-symbols:share"} class="text-2xl" />
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
+                                        {showSponsorButton ? i18n(I18nKey.sponsorButton) : i18n(I18nKey.shareOnSocial)}
+                                    </h3>
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                                        {showSponsorButton ? i18n(I18nKey.sponsorButtonText) : i18n(I18nKey.shareOnSocialDescription)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                {siteConfig.post.share && (
+                                    <SharePoster
+                                        client:load
+                                        title={entry.data.title}
+                                        author={entry.data.author || profileConfig.name}
+                                        description={entry.data.description || entry.data.title}
+                                        pubDate={formatDateToYYYYMMDD(entry.data.published)}
+                                        coverImage={posterCoverUrl}
+                                        coverImageSelector={posterCoverSelector}
+                                        url={Astro.url.href}
+                                        siteTitle={siteConfig.title}
+                                        avatar={posterAvatarUrl}
+                                        avatarSelector={posterAvatarSelector}
+                                    />
+                                )}
+                                {showSponsorButton && (
+                                    <a href={url("/sponsor/")} class="inline-flex items-center gap-2 px-6 py-3 bg-(--primary) text-white dark:text-black/70 rounded-lg font-medium hover:bg-(--primary)/80 hover:scale-105 active:scale-95 transition-all whitespace-nowrap">
+                                        <span>{i18n(I18nKey.sponsor)}</span>
+                                        <Icon name="fa7-solid:arrow-right" class="text-sm" />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {licenseConfig.enable && <License
                 title={entry.data.title}
