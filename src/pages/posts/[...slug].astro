@@ -181,7 +181,7 @@ const jsonLd = {
         {entry.data.tags.map((tag) => <meta property="article:tag" content={tag.trim()}>)}
     </Fragment>
     <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
-        <div id="post-container" class:list={["card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full ",
+        <div id="post-container" class:list={["card-base z-10 px-6 md:px-9 pt-6 pb-6 md:pb-9 relative w-full ",
             {}
         ]}>
             {usePostCoverOverlay && processedImage && (
@@ -307,7 +307,7 @@ const jsonLd = {
                 sourceLink={entry.data.sourceLink}
                 licenseName={entry.data.licenseName}
                 licenseUrl={entry.data.licenseUrl}
-                class="mb-6 rounded-xl license-container onload-animation"
+                class="rounded-xl license-container onload-animation"
             />}
 
         </div>

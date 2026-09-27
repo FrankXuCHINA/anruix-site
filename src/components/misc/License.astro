@@ -49,7 +49,7 @@ const licenseIcon = licenseName
 ---
 
 <div
-  class={`relative transition overflow-hidden bg-(--license-block-bg) py-5 px-6 ${className}`}
+  class={`relative transition overflow-hidden bg-(--license-block-bg) py-4 px-4 sm:px-5 ${className}`}
 >
   <div class="transition font-bold text-black/75 dark:text-white/75">
     {title}
@@ -57,37 +57,37 @@ const licenseIcon = licenseName
   <a href={postUrl} class="link text-(--primary) break-all">
     {postUrl}
   </a>
-  <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-2">
-    <div>
-      <div class="transition text-black/30 dark:text-white/30 text-sm">
+  <div class="grid grid-cols-3 gap-2 sm:gap-4 mt-3">
+    <div class="min-w-0">
+      <div class="transition text-black/30 dark:text-white/30 text-xs sm:text-sm">
         {i18n(I18nKey.author)}
       </div>
-      <div class="transition text-black/75 dark:text-white/75 line-clamp-2">
+      <div class="transition text-black/75 dark:text-white/75 text-xs sm:text-sm break-words">
         {author || profileConf.name}
       </div>
     </div>
-    <div>
-      <div class="transition text-black/30 dark:text-white/30 text-sm">
+    <div class="min-w-0">
+      <div class="transition text-black/30 dark:text-white/30 text-xs sm:text-sm">
         {i18n(I18nKey.publishedAt)}
       </div>
-      <div class="transition text-black/75 dark:text-white/75 line-clamp-2">
+      <div class="transition text-black/75 dark:text-white/75 text-xs sm:text-sm break-words">
         {formatDateToYYYYMMDD(pubDate)}
       </div>
     </div>
-    <div>
-      <div class="transition text-black/30 dark:text-white/30 text-sm">
+    <div class="min-w-0">
+      <div class="transition text-black/30 dark:text-white/30 text-xs sm:text-sm">
         {i18n(I18nKey.license)}
       </div>
       <a
         href={licenseName ? licenseUrl || undefined : licenseConf.url}
         target="_blank"
-        class="link text-(--primary) line-clamp-2"
+        class="link text-(--primary) text-xs sm:text-sm break-words"
         >{licenseName || licenseConf.name}</a
       >
     </div>
   </div>
   <Icon
     name={licenseIcon}
-    class="transition text-[15rem] absolute pointer-events-none right-6 top-1/2 -translate-y-1/2 text-black/5 dark:text-white/5"
+    class="transition text-[9rem] sm:text-[11rem] absolute pointer-events-none right-4 sm:right-6 top-1/2 -translate-y-1/2 text-black/5 dark:text-white/5"
   />
 </div>
