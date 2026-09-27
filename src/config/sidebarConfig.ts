@@ -11,7 +11,7 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 	// left: 仅显示左侧边栏
 	// right: 仅显示右侧边栏
 	// both: 双侧边栏，1280px以上同时显示左右，769-1279px根据tabletSidebar配置显示其中一侧
-	position: "left",
+	position: "both",
 
 	// 平板端(769-1279px)显示哪侧侧边栏，仅position为both时生效
 	// left: 平板端显示左侧边栏
@@ -47,13 +47,6 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			position: "top",
 			// 是否在文章详情页显示
 			showOnPostPage: true,
-		},
-		{
-			// 组件类型：站点统计组件
-			type: "stats",
-			enable: true,
-			position: "top",
-			showOnPostPage: false,
 		},
 		{
 			// 组件类型：公告组件
@@ -105,18 +98,17 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 				collapseThreshold: 10,
 			},
 		},
-		{
-			// 组件类型：侧边栏目录组件（只在文章详情页显示）
-			type: "sidebarToc",
-			enable: true,
-			position: "sticky",
-			showOnPostPage: true,
-			hideOnNonPostPage: true,
-		},
 	],
 
 	// 右侧边栏组件配置列表
 	rightComponents: [
+		{
+			// 组件类型：站点统计组件
+			type: "stats",
+			enable: true,
+			position: "top",
+			showOnPostPage: false,
+		},
 		{
 			// 组件类型：最新动态组件
 			type: "dynamic",
@@ -169,6 +161,14 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 					showHeatmap: true,
 				},
 			},
+		},
+		{
+			// 组件类型：侧边栏目录组件（只在文章详情页显示）
+			type: "sidebarToc",
+			enable: true,
+			position: "sticky",
+			showOnPostPage: true,
+			hideOnNonPostPage: true,
 		},
 		{
 			// 组件类型：广告栏组件 1
