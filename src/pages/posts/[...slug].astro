@@ -1,8 +1,7 @@
 ---
 import { render } from "astro:content";
-import License from "@components/misc/License.astro";
 import Markdown from "@components/common/Markdown.astro";
-import SharePoster from "@/components/misc/SharePoster.svelte";
+import License from "@components/misc/License.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
@@ -17,13 +16,9 @@ import {
 import { Icon } from "astro-icon/components";
 import CoverImage from "@/components/common/CoverImage.astro";
 import PostMetadata from "@/components/layout/PostMeta.astro";
+import SharePoster from "@/components/misc/SharePoster.svelte";
 import { coverImageConfig, licenseConfig, sponsorConfig } from "@/config";
-import { profileConfig, siteConfig } from "../../config";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
-import {
-	getApiUrlList,
-	processCoverImageSync,
-} from "../../utils/image-utils";
 import {
 	getAuthorAvatarUrl,
 	getSiteLogo,
@@ -35,6 +30,8 @@ import {
 	buildPublisherEntity,
 	toAbsoluteUrl,
 } from "@/utils/schema-utils";
+import { profileConfig, siteConfig } from "../../config";
+import { getApiUrlList, processCoverImageSync } from "../../utils/image-utils";
 
 const showSponsorButton =
 	sponsorConfig.showButtonInPost && siteConfig.pages.sponsor;

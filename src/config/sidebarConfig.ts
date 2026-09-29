@@ -214,8 +214,7 @@ export const sidebarLayoutConfig: SidebarLayoutConfig = {
 			specificConfig: {
 				ad: {
 					title: "",
-					content:
-						"",
+					content: "",
 					link: {
 						text: "",
 						url: "about/",

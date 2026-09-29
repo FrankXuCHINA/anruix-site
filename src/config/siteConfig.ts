@@ -78,7 +78,7 @@ export const siteConfig: SiteConfig = {
 
 	// Favicon 配置
 	// 如果启用了OpenGraph图片功能，数组中需要包含png格式的favicon图标
-	favicon: [{src: "/favicon.png"}],
+	favicon: [{ src: "/favicon.png" }],
 
 	// 导航栏配置
 	navbar: {
@@ -91,7 +91,7 @@ export const siteConfig: SiteConfig = {
 		// image 和 url 类型可额外设置 valueDark，用于暗色模式下显示另一张图片，不设置则亮暗色共用 value
 		// 例如: { type: "image", value: "assets/images/logo.png", valueDark: "assets/images/logo-dark.png", alt: "Logo" }
 		// 使用 Astro 图标库时不需要设置 valueDark，图标会自动跟随主题亮暗色切换
-		logo: {type:"image",value:"/favicon.png",alt:"安锐的小站"},
+		logo: { type: "image", value: "/favicon.png", alt: "安锐的小站" },
 		// 导航栏标题
 		title: "安锐的小站",
 		// 全宽导航栏，导航栏是否占满屏幕宽度

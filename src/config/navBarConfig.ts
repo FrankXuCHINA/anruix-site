@@ -10,7 +10,11 @@ import {
 // NavBar Configuration - Dynamically generate navigation bar links based on order
 // ============================================================================
 const getDynamicNavBarConfig = (): NavBarConfig => ({
- links: [{...LinkPresets.Home, name: "首页"}, LinkPresets.Archive, {...LinkPresets.About, name: "关于"}],
+	links: [
+		{ ...LinkPresets.Home, name: "首页" },
+		LinkPresets.Archive,
+		{ ...LinkPresets.About, name: "关于" },
+	],
 });
 
 // 导航搜索配置
