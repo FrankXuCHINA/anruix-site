@@ -225,7 +225,7 @@ export const siteConfig: SiteConfig = {
 		// 沉浸阅读配置：电脑端文章详情页右下角按钮，进入后只留文章卡片+左侧目录
 		immersiveReading: {
 			// 总开关：false 则不显示按钮
-			enable: true,
+			enable: false,
 			// 进入文章页是否默认开启沉浸阅读
 			defaultOn: false,
 			// 沉浸阅读中是否显示目录栏

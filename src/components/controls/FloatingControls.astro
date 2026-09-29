@@ -91,4 +91,10 @@ const immersiveReadingEnabled =
         bottom: 4rem;
     }
   }
+
+  @media (min-width: 1280px) {
+    .floating-controls-container {
+      right: calc((100% - min(92vw, var(--page-width))) / 2 + 1rem);
+    }
+  }
 </style>
