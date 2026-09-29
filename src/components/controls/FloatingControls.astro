@@ -92,10 +92,17 @@ const immersiveReadingEnabled =
     }
   }
 
+  @media (max-width: 480px) {
+    .floating-controls-container {
+      right: 13px;
+      gap: 13px;
+    }
+  }
+
   @media (min-width: 1280px) {
     .floating-controls-container {
       right: calc((100% - min(92vw, var(--page-width))) / 2 + 1rem);
-      bottom: 34px;
+      bottom: 55px;
       gap: 13px;
     }
   }
